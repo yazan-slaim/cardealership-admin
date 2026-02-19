@@ -2,13 +2,13 @@ import mongoose from "mongoose";
 
 const addressSchema = new mongoose.Schema(
   {
-    street: { type: String, trim: true },
-    city: { type: String, trim: true },
-    state: { type: String, trim: true },
-    postalCode: { type: String, trim: true },
+    street: { type: String, trim: true, default: "" },
+    city: { type: String, trim: true, default: "" },
+    state: { type: String, trim: true, default: "" },
+    postalCode: { type: String, trim: true, default: "" },
     country: { type: String, trim: true, default: "US" },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const clientSchema = new mongoose.Schema(
@@ -24,6 +24,7 @@ const clientSchema = new mongoose.Schema(
       trim: true,
       lowercase: true,
       index: true,
+      default: "",
     },
 
     phoneNumber: {
@@ -33,7 +34,10 @@ const clientSchema = new mongoose.Schema(
       index: true,
     },
 
-    address: addressSchema,
+    address: {
+      type: addressSchema,
+      default: () => ({}),
+    },
 
     preferredContactMethod: {
       type: String,
@@ -41,16 +45,20 @@ const clientSchema = new mongoose.Schema(
       default: "phone",
     },
 
-    leadSource: { type: String },
+    leadSource: {
+      type: String,
+      default: "",
+    },
 
-    interestedCars: [
-      { type: mongoose.Schema.Types.ObjectId, ref: "Car" }
-    ],
+    interestedCars: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Car" }],
+      default: [],
+    },
 
-    // UPDATED — use correct spelling & model reference
-    enquiries: [
-      { type: mongoose.Schema.Types.ObjectId, ref: "Enquiry" }
-    ],
+    enquiries: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Enquiry" }],
+      default: [],
+    },
 
     status: {
       type: String,
@@ -65,17 +73,35 @@ const clientSchema = new mongoose.Schema(
       default: "new",
     },
 
-    assignedAgent: { type: mongoose.Schema.Types.ObjectId, ref: "Employee" },
+    assignedAgent: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Employee",
+      default: null,
+    },
 
-    tasks: [{ type: mongoose.Schema.Types.ObjectId, ref: "Task" }],
-    notes: [{ type: mongoose.Schema.Types.ObjectId, ref: "Note" }],
-    purchases: [{ type: mongoose.Schema.Types.ObjectId, ref: "SoldCar" }],
-    files: [{ type: mongoose.Schema.Types.ObjectId, ref: "File" }],
+    tasks: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Task" }],
+      default: [],
+    },
+
+    notes: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Note" }],
+      default: [],
+    },
+
+    purchases: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "SoldCar" }],
+      default: [],
+    },
+
+    files: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "File" }],
+      default: [],
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-// Optional performance optimization
 clientSchema.index({ email: 1, phoneNumber: 1 });
 
 export const Client =
