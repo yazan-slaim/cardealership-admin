@@ -12,6 +12,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 /* ---------- styled wrappers ---------- */
 
@@ -32,6 +33,7 @@ const FormWrapper = styled(Paper)`
 
 export default function Page() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
@@ -71,15 +73,21 @@ export default function Page() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/democlients/createclient", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/clients`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${JSON.stringify(session.accessToken)}`,
+          },
+          body: JSON.stringify(form),
+        },
+      );
 
       if (!res.ok) throw new Error("Failed to create client");
 
-      router.push("/clients"); // change path if needed
+      router.push("/clients");
     } catch (err) {
       console.error(err);
     } finally {

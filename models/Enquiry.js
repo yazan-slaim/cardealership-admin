@@ -8,8 +8,8 @@ const EnquirySchema = new Schema(
       required: true,
     },
 
-    client: { type: Schema.Types.ObjectId, ref: "Client" }, 
-    car: { type: Schema.Types.ObjectId, ref: "Car" },       
+    client: { type: Schema.Types.ObjectId, ref: "Client" },
+    car: { type: Schema.Types.ObjectId, ref: "Car" },
 
     firstName: String,
     lastName: String,
@@ -27,8 +27,8 @@ const EnquirySchema = new Schema(
 
     testDriveDate: Date,
 
-    status: { 
-      type: String, 
+    status: {
+      type: String,
       enum: ["new", "in_progress", "closed"],
       default: "new",
     },
@@ -38,8 +38,7 @@ const EnquirySchema = new Schema(
 
     handledBy: { type: Schema.Types.ObjectId, ref: "Employee" },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-export const Enquiry =
-  models?.Enquiry || model("Enquiry", EnquirySchema);
+export const Enquiry = models?.Enquiry || model("Enquiry", EnquirySchema);

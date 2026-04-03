@@ -56,9 +56,10 @@ export default function Page() {
 
       try {
         const res = await fetch(
-          `/api/democlients/getclients?search=${searchQuery}&sort=${orderBy}&order=${order}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/api/client/getclients`,
         );
         const data = await res.json();
+        console.log("Fetched clients:", res);
         setClients(data);
       } catch (err) {
         console.error(err);

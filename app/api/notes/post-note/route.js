@@ -1,54 +1,70 @@
-// app/api/client/post-note/route.js
-
-import { NextResponse } from 'next/server';
-import { connectMongoDB } from '@/lib/mongodb';
-import { Client } from '@/models/Client';
-import { Note } from '@/models/Note';
+import { NextResponse } from "next/server";
+import { connectMongoDB } from "@/lib/mongodb";
+import { Note } from "@/models/Note";
+import { Activity } from "@/models/Activity";
+import mongoose from "mongoose";
 
 export async function POST(req) {
   try {
     await connectMongoDB();
 
-    const { clientId, authorId, content, tags = [], taggedAgents = [] } = await req.json();
+    const { clientId, authorId, content, taggedAgents = [] } = await req.json();
 
     if (!clientId || !authorId || !content?.trim()) {
       return NextResponse.json(
-        { success: false, message: 'clientId, authorId, and content are required' },
-        { status: 400 }
+        { success: false, message: "Missing required fields" },
+        { status: 400 },
       );
     }
 
-    const newNote = new Note({
+    if (
+      !mongoose.Types.ObjectId.isValid(clientId) ||
+      !mongoose.Types.ObjectId.isValid(authorId)
+    ) {
+      return NextResponse.json(
+        { success: false, message: "Invalid ID format" },
+        { status: 400 },
+      );
+    }
+
+    // Create note
+    const newNote = await Note.create({
       author: authorId,
       client: clientId,
       content: content.trim(),
       taggedAgents,
-      createdAt: new Date(),
     });
 
-    await newNote.save();
-
-    const client = await Client.findById(clientId);
-    if (!client) {
-      return NextResponse.json(
-        { success: false, message: 'Client not found' },
-        { status: 404 }
-      );
-    }
-
-    client.notes.push(newNote._id);
-    await client.save();
-
-    return NextResponse.json({
-      success: true,
-      note: newNote,
-      message: 'Note added successfully',
+    // Log activity
+    await Activity.create({
+      client: clientId,
+      type: "note_added",
+      metadata: {
+        preview: content.trim().substring(0, 80),
+        taggedCount: taggedAgents.length,
+      },
+      performedBy: authorId,
     });
-  } catch (error) {
-    console.error('Error adding note:', error);
+
+    // Populate author + tagged agents before returning
+    await newNote.populate([
+      { path: "author", select: "fullName email role" },
+      { path: "taggedAgents", select: "fullName email role" },
+    ]);
+
     return NextResponse.json(
-      { success: false, message: 'Internal server error' },
-      { status: 500 }
+      {
+        success: true,
+        note: newNote,
+      },
+      { status: 201 },
+    );
+  } catch (error) {
+    console.error("Error adding note:", error);
+
+    return NextResponse.json(
+      { success: false, message: "Internal server error" },
+      { status: 500 },
     );
   }
 }
