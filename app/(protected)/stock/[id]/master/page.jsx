@@ -2,717 +2,599 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import styled from "@emotion/styled";
-import { Button, Chip } from "@mui/material";
-import { Phone, MessageCircle, Send } from "lucide-react";
+import { 
+  Phone, 
+  WhatsApp, 
+  AutoAwesome, 
+  Bolt, 
+  Info, 
+  FileDownload,
+  DocumentScanner,
+  Inventory
+} from "@mui/icons-material";
 
-const Wrapper = styled.div`
-  padding: 16px;
-  background: #f5f7fa;
-  color: black;
+// --- GLOBAL LAYOUT --- 
+const PageContainer = styled.div`
+  background-color: #f8fafc;
+  min-height: 100vh;
+  padding: 32px;
+  color: #0f172a;
 `;
 
-/* 🔵 TOP BAR */
-const TopBar = styled.div`
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: #1e3a5f;
-  color: white;
-  padding: 12px 16px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-`;
-
-const LeftTop = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-
-const Title = styled.div`
-  font-weight: bold;
-  font-size: 18px;
-`;
-
-const SubText = styled.div`
-  font-size: 12px;
-  opacity: 0.7;
-`;
-
-const StatusBadge = styled.div`
-  background: #f4c542;
-  color: black;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-weight: bold;
-`;
-
-const Actions = styled.div`
-  display: flex;
-  gap: 8px;
-`;
-
-const ActionBtn = styled(Button)`
-  background: white;
-  color: #1e3a5f;
-`;
-
-/* 🧾 CONTEXT */
-const ContextStrip = styled.div`
-  margin-top: 10px;
-  background: white;
-  padding: 10px;
-  border-radius: 8px;
-  display: flex;
-  justify-content: space-between;
-  font-size: 14px;
-  flex-direction: column;
-`;
-
-/* 📦 SECTION */
-const Section = styled.div`
-  margin-top: 16px;
-  background: white;
-  border-radius: 10px;
-`;
-
-const SectionHeader = styled.div`
-  background: #2f4f6f;
-  color: white;
-  padding: 10px;
-  font-weight: bold;
-  border-radius: 10px 10px 0 0;
-`;
-
-/* 🚗 VEHICLE */
-const VehicleGrid = styled.div`
-  display: flex;
-  gap: 16px;
-  padding: 16px;
-`;
-
-const CarImage = styled.img`
-  width: 200px;
-  height: 130px;
-  object-fit: cover;
-  border-radius: 8px;
-`;
-
-const VehicleDetails = styled.div`
-  flex: 1;
-  padding: 10px;
-`;
-
-const DetailRow = styled.div`
-  font-size: 14px;
-  margin-top: 4px;
-  border-bottom: 1px solid #eee;
-  padding: 5px;
-  display: flex;
-  flex-direction: row;
-`;
-const Label = styled.span`
-  color: #1e3a5f;
-  font-size: large;
-`;
-
-const PriceRow = styled.div`
-  margin-top: 10px;
-  display: flex;
-  gap: 20px;
-`;
-
-const ProfitBadge = styled.span`
-  background: #2ecc71;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-weight: bold;
-`;
-
-/* 💰 PRICING */
-const PricingGrid = styled.div`
-  padding: 16px;
+const LayoutGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const LeftCol = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+`;
+
+const RightCol = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+`;
+
+// --- HEADER STRIP ---
+const HeaderStrip = styled.div`
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  margin-bottom: 24px;
+  max-width: 1400px;
+  margin: 0 auto 24px auto;
+`;
+
+const TitleRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+`;
+
+const TitleCol = styled.div`
+  h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    color: #0f172a;
+  }
+  .sub {
+    font-size: 1.2rem;
+    color: #475569;
+    font-weight: 500;
+    margin-bottom: 12px;
+  }
+`;
+
+const TagsRow = styled.div`
+  display: flex;
   gap: 12px;
-`;
-
-const Hot = styled.span`
-  color: red;
-  font-weight: bold;
-`;
-const Main = styled.div`
-  display: flex;
-  gap: 16px;
-  padding: 16px;
-`;
-
-const Left = styled.div`
-  flex: 2;
-`;
-
-const Right = styled.div`
-  flex: 1;
-  position: sticky;
-  top: 80px;
-  height: fit-content;
-`;
-
-/* 🟡 MINI ACTIVITY */
-const MiniActivity = styled.div`
-  font-size: 13px;
-  margin-bottom: 10px;
-`;
-
-/* 🔥 TABS */
-const Tabs = styled.div`
-  display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
-`;
-
-const Tab = styled.div`
-  padding: 6px 12px;
-  cursor: pointer;
-  border-bottom: ${(p) => (p.active ? "2px solid blue" : "none")};
-`;
-
-/* 🧠 CONTENT */
-const Content = styled.div`
-  background: white;
-  padding: 12px;
-  border-radius: 8px;
-`;
-
-/* 📊 LEADS */
-const LeadsTable = styled.div``;
-
-const RowHeader = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
-  font-weight: bold;
-`;
-
-const Row = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
-  padding: 8px 0;
-  border-bottom: 1px solid #eee;
+  align-items: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  
+  .stock-vin {
+    color: #64748b;
+    background: #f1f5f9;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+  .ready {
+    background: #16a34a;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 4px;
+  }
+  .hot {
+    background: #fee2e2;
+    color: #ef4444;
+    padding: 4px 10px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
 `;
 
 const ActionsRow = styled.div`
   display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+`;
+
+const Btn = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.2s;
+
+  &:hover { opacity: 0.9; }
+  
+  &.call { background: #f1f5f9; color: #0f172a; }
+  &.whatsapp { background: #16a34a; color: white; }
+  &.reserve { background: #1e3a8a; color: white; }
+  &.sold { background: #0f172a; color: white; }
+`;
+
+// --- METRICS ROW ---
+const MetricsRow = styled.div`
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+  padding-top: 24px;
+  border-top: 1px solid #e2e8f0;
+`;
+
+const Metric = styled.div`
+  display: flex;
+  flex-direction: column;
   gap: 4px;
+  
+  label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .val {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #0f172a;
+  }
+  .blue { color: #1e3a8a; }
+  .green { color: #16a34a; }
 `;
 
-/* 🕓 TIMELINE */
-const Timeline = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-`;
-
-const Event = styled.div`
-  font-size: 14px;
-`;
-
-/* 📁 DOCS */
-const Docs = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-`;
-
-const DocItem = styled.div`
-  padding: 8px;
-  background: #f1f1f1;
-`;
-
-/* 💰 RIGHT */
-const PriceBox = styled.div`
+// --- GALLERY ---
+const GalleryBox = styled.div`
   background: white;
-  padding: 12px;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+`;
+
+const HeroImage = styled.div`
+  width: 100%;
+  height: 400px;
+  background-color: #cbd5e1;
+  background-image: url(${props => props.src});
+  background-size: cover;
+  background-position: center;
   border-radius: 8px;
+  margin-bottom: 12px;
+  position: relative;
 `;
 
-const Value = styled.div`
-  font-weight: bold;
-`;
-
-const Profit = styled.div`
-  color: green;
-  margin-top: 10px;
-`;
-
-const Small = styled.div`
-  font-size: 12px;
-  margin-top: 6px;
-`;
-
-const RightActions = styled.div`
-  margin-top: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-`;
-const Thirdheader = styled.h3`
-  font-weight: bold;
-  font-size: large;
-  color: #1e3a5f;
-`;
-const Card = styled.div`
+const WatermarkToggle = styled.div`
+  position: absolute;
+  top: 12px; left: 12px;
   background: white;
+  color: #0f172a;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+`;
+
+const ThumbRow = styled.div`
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+`;
+
+const Thumb = styled.div`
+  height: 90px;
+  background-color: #f1f5f9;
+  background-image: url(${props => props.src});
+  background-size: cover;
+  background-position: center;
   border-radius: 8px;
-  margin-top: 12px;
-  overflow: hidden;
+  border: ${props => props.active ? '2px solid #1e3a8a' : '2px solid transparent'};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  font-size: 0.7rem;
+  font-weight: 600;
 `;
 
-const CardHeader = styled.div`
-  background: #2f4f6f;
-  color: white;
-  padding: 8px 10px;
-  font-size: 13px;
-  font-weight: bold;
+// --- TWIN PANELS ---
+const TwinPanels = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
 `;
 
-const CardBody = styled.div`
-  padding: 10px;
-  * {
-    color: black;
+const Panel = styled.div`
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+
+  h3 {
+    margin: 0 0 16px 0;
+    font-size: 1rem;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 `;
 
-const AlertItem = styled.div`
-  font-size: 13px;
-  margin-bottom: 6px;
-`;
-
-const StatRow = styled.div`
+const SpecRow = styled.div`
   display: flex;
   justify-content: space-between;
-  font-size: 13px;
-  padding: 4px 0;
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.9rem;
+  
+  &:last-child { border: none; padding-bottom: 0; }
+  
+  .lbl { color: #64748b; }
+  .val { font-weight: 700; color: #0f172a; }
 `;
 
-const Green = styled.span`
-  color: green;
-  font-weight: bold;
-`;
-const LeadsHeader = styled.div`
+const HealthWidget = styled.div`
+  background: #f8fafc;
+  padding: 16px;
+  border-radius: 8px;
   display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
-  gap: 10px;
-`;
-
-const SearchInput = styled.input`
-  flex: 1;
-  padding: 6px 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-`;
-
-const FilterGroup = styled.div`
-  display: flex;
-  gap: 6px;
-`;
-
-const FilterBtn = styled.div`
-  padding: 5px 10px;
-  border-radius: 6px;
-  background: ${(p) => (p.active ? "#1e3a5f" : "#eee")};
-  color: ${(p) => (p.active ? "white" : "black")};
-  font-size: 12px;
-  cursor: pointer;
-`;
-
-const LeadRow = styled.div`
-  display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr 1fr;
   align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid #eee;
+  gap: 16px;
+  margin-bottom: 12px;
+
+  .icon {
+    width: 40px; height: 40px;
+    background: #dcfce7; color: #16a34a;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .info {
+    display: flex; flex-direction: column;
+    .lbl { font-size: 0.75rem; color: #64748b; font-weight: 600; }
+    .val { font-size: 1rem; font-weight: 800; color: #0f172a; }
+  }
 `;
 
-const LeadName = styled.div`
-  font-weight: 500;
+// --- TIMELINE ---
+const TimelineBox = styled(Panel)`
+  margin-top: 0;
 `;
-
-const LeadMeta = styled.div`
-  font-size: 12px;
-  color: gray;
-`;
-
-const Badge = styled.span`
-  background: ${(p) =>
-    p.type === "hot" ? "#ff4d4f" : p.type === "warm" ? "#faad14" : "#ccc"};
-  color: white;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 10px;
-  margin-left: 6px;
-`;
-
-const LeadActions = styled.div`
+const TimeItem = styled.div`
   display: flex;
-  gap: 6px;
+  gap: 16px;
+  margin-bottom: 24px;
+  position: relative;
+  
+  &:last-child { margin-bottom: 0; }
+  
+  .dot {
+    width: 32px; height: 32px;
+    background: #f1f5f9;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #64748b;
+    z-index: 2;
+  }
+  .content {
+    flex: 1;
+    .title { font-weight: 600; font-size: 0.95rem; color: #0f172a; margin-bottom: 4px; }
+    .meta { font-size: 0.8rem; color: #64748b; }
+  }
 `;
-function Page({}) {
-  const { id } = useParams();
-  const [car, setCar] = React.useState(null);
-  const [activeTab, setActiveTab] = useState("leads");
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("all");
-  useEffect(() => {
-    console.log("Car ID from URL:", id);
-    if (!id) return;
 
+// --- RIGHT COL WIDGETS ---
+const AICard = styled.div`
+  background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+  border-radius: 12px;
+  padding: 24px;
+  color: white;
+  box-shadow: 0 10px 15px -3px rgba(30, 58, 138, 0.4);
+
+  h3 { margin: 0 0 12px 0; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+  p { font-size: 0.9rem; line-height: 1.5; color: #e0e7ff; margin: 0 0 16px 0; }
+  
+  .rec {
+    background: rgba(255,255,255,0.1);
+    padding: 12px; border-radius: 8px;
+    font-size: 0.85rem; font-style: italic; margin-bottom: 16px; border-left: 3px solid #60a5fa;
+  }
+  
+  button {
+    width: 100%; background: white; color: #1e3a8a;
+    border: none; padding: 12px; border-radius: 8px;
+    font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+`;
+
+const LeadCard = styled(Panel)`
+  .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  h3 { margin: 0; }
+  .badge { background: #dbeafe; color: #1e3a8a; font-size: 0.7rem; padding: 4px 8px; border-radius: 12px; font-weight: 700;}
+`;
+
+const LeadItem = styled.div`
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex; justify-content: space-between; align-items: center;
+  &:last-child { border: none; padding-bottom: 0; }
+  
+  .info {
+    .name { font-weight: 700; font-size: 0.95rem; color: #0f172a; margin-bottom: 2px;}
+    .desc { font-size: 0.8rem; color: #64748b; display: flex; align-items: center; gap: 4px;}
+  }
+`;
+
+const NegCard = styled(Panel)`
+  background: #f8fafc;
+`;
+const NegRow = styled.div`
+  display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 8px;
+  .lbl { color: #64748b; }
+  .val { font-weight: 700; color: #0f172a;}
+`;
+
+const DocCard = styled(Panel)``;
+const DocRow = styled.div`
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px; background: white; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 8px;
+  .info {
+    .name { font-weight: 600; font-size: 0.85rem; margin-bottom: 2px; color: #0f172a;}
+    .meta { font-size: 0.7rem; color: #64748b;}
+  }
+  .icon { color: #64748b; cursor: pointer; }
+`;
+
+
+export default function MasterStockDetail() {
+  const { id } = useParams();
+  const [car, setCar] = useState(null);
+
+  useEffect(() => {
+    if (!id) return;
     async function fetchCar() {
       try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/cars/${id}`,
-        );
-        const data = await response.json();
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002'}/api/cars/${id}`);
+        const data = await res.json();
         setCar(data.car);
-      } catch (error) {
-        console.error(error);
+      } catch (err) {
+        console.error(err);
       }
     }
-
     fetchCar();
-  }, []);
-  console.log(car);
+  }, [id]);
 
-  if (!car) return <div>Loading...</div>;
+  if (!car) return <div style={{ padding: 48, fontWeight: 600 }}>Loading Vehicle Intelligence...</div>;
+
+  const floorPrice = Math.floor((car.price || 0) * 0.9);
+  const profit = Math.floor((car.price || 0) * 0.1);
 
   return (
-    <Wrapper>
-      {!car ? (
-        <p>Loading...</p>
-      ) : (
-        <>
-          {/* 🔵 TOP BAR */}
-          <TopBar>
-            <LeftTop>
-              <Title>
-                {car.year} {car.carMake} {car.model}
-              </Title>
-              <SubText>Stock #{car._id.slice(-6).toUpperCase()}</SubText>
-            </LeftTop>
+    <PageContainer>
+      
+      {/* 🔴 HEADER STRIP */}
+      <HeaderStrip>
+        <TitleRow>
+          <TitleCol>
+            <h1>{car.year} {car.carMake} {car.model}</h1>
+            <div className="sub">({car.trim || "Base Trim"})</div>
+            <TagsRow>
+              <div className="stock-vin">Stock: #{car._id.slice(-6).toUpperCase()}</div>
+              <div className="stock-vin">VIN: {car.vinNumber || "N/A"}</div>
+            </TagsRow>
+            <TagsRow style={{ marginTop: 12 }}>
+              <div className="ready">{car.sold ? 'SOLD' : 'READY FOR SALE'}</div>
+              {car.statusLevel === 'HOT' && <div className="hot">🔥 HOT</div>}
+            </TagsRow>
+          </TitleCol>
 
-            <StatusBadge>
-              {car.NewArrival ? "New Arrival" : car.sold ? "Sold" : "Ready"}
-            </StatusBadge>
+          <ActionsRow>
+            <Btn className="call"><Phone fontSize="small"/> Call</Btn>
+            <Btn className="whatsapp"><WhatsApp fontSize="small"/> WhatsApp</Btn>
+            <Btn className="reserve">Reserve Vehicle</Btn>
+            <Btn className="sold">Mark Sold</Btn>
+          </ActionsRow>
+        </TitleRow>
 
-            <Actions>
-              <ActionBtn startIcon={<Phone />}>Call</ActionBtn>
-              <ActionBtn startIcon={<MessageCircle />}>WhatsApp</ActionBtn>
-              <ActionBtn startIcon={<Send />}>Send</ActionBtn>
-              <ActionBtn color="success">Reserve</ActionBtn>
-              <ActionBtn color="error">Mark Sold</ActionBtn>
-            </Actions>
-          </TopBar>
+        <MetricsRow>
+          <Metric>
+            <label>Asking Price</label>
+            <div className="val blue">${(car.price || 0).toLocaleString()}</div>
+          </Metric>
+          <Metric>
+            <label>Floor Price</label>
+            <div className="val">${floorPrice.toLocaleString()}</div>
+          </Metric>
+          <Metric>
+            <label>Profit @ Ask</label>
+            <div className="val green">${profit.toLocaleString()}</div>
+          </Metric>
+          <Metric>
+            <label>Days In Stock</label>
+            <div className="val">{car.daysInStock || 0} Days</div>
+          </Metric>
+          <Metric>
+            <label>Lead Score</label>
+            <div className="val">{car.leadScore || 85}/100</div>
+          </Metric>
+        </MetricsRow>
+      </HeaderStrip>
 
-          {/* 🧾 CONTEXT STRIP */}
-          <ContextStrip>
-            <span>Client: Ahmad Khaled</span>
-            <span>Sales Rep: You</span>
-            <span>Last Contact: 2h ago</span>
-            <span>Lead Score: 78</span>
-          </ContextStrip>
+      {/* 🔴 MAIN GRID */}
+      <LayoutGrid>
+        
+        {/* LEFT COLUMN */}
+        <LeftCol>
+          
+          <GalleryBox>
+            <HeroImage src={car.images?.[0] || "https://images.unsplash.com/photo-1606152421802-db97b9c7a11b?q=80&w=1200&auto=format&fit=crop"}>
+              <WatermarkToggle><DocumentScanner fontSize="small"/> Watermark: ON</WatermarkToggle>
+            </HeroImage>
+            <ThumbRow>
+              <Thumb active src={car.images?.[0] || "https://images.unsplash.com/photo-1606152421802-db97b9c7a11b"} />
+              <Thumb src={car.images?.[1] || "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8"} />
+              <Thumb>📸 MISSING: ENGINE</Thumb>
+              <Thumb>📸 MISSING: TRUNK</Thumb>
+            </ThumbRow>
+          </GalleryBox>
 
-          {/* 🚗 VEHICLE SECTION */}
+          <TwinPanels>
+            <Panel>
+              <h3><Info fontSize="small"/> VIN Decoded Data</h3>
+              <SpecRow><span className="lbl">Engine</span><span className="val">{car.engineSize || '3.0L'} Turbo</span></SpecRow>
+              <SpecRow><span className="lbl">Drive Type</span><span className="val">{car.transmission || '4MATIC AWD'}</span></SpecRow>
+              <SpecRow><span className="lbl">Mileage</span><span className="val">{car.mileage || '4,200'} km</span></SpecRow>
+              <SpecRow><span className="lbl">Fuel Type</span><span className="val">{car.fuel || 'Mild Hybrid (48V)'}</span></SpecRow>
+            </Panel>
+            <Panel>
+              <h3><AutoAwesome fontSize="small"/> Health & History</h3>
+              <HealthWidget>
+                <div className="icon"><Bolt /></div>
+                <div className="info">
+                  <span className="lbl">Battery Health</span>
+                  <span className="val">98.4% (Excellent)</span>
+                </div>
+              </HealthWidget>
+              <HealthWidget style={{ background: '#eff6ff' }}>
+                <div className="icon" style={{ background: '#dbeafe', color: '#1d4ed8' }}><DocumentScanner /></div>
+                <div className="info">
+                  <span className="lbl">CarSeer History</span>
+                  <span className="val">CLEAN REPORT</span>
+                </div>
+              </HealthWidget>
+            </Panel>
+          </TwinPanels>
 
-          {/* 💰 PRICING / OPPORTUNITY */}
-          <Section>
-            <SectionHeader>PRICING & OPPORTUNITY</SectionHeader>
-
-            <PricingGrid>
-              <Row>
-                <span>Days in Stock</span>
-                <b>{car.daysInStock}</b>
-              </Row>
-
-              <Row>
-                <span>Lead Score</span>
-                <b>78</b>
-              </Row>
-
-              <Row>
-                <span>Hotness</span>
-                <Hot>Hot</Hot>
-              </Row>
-
-              <Row>
-                <span>Condition</span>
-                <b>{car.condition}</b>
-              </Row>
-
-              <Row>
-                <span>Transmission</span>
-                <b>{car.transmission}</b>
-              </Row>
-
-              <Row>
-                <span>Mileage</span>
-                <b>{car.mileage}</b>
-              </Row>
-            </PricingGrid>
-          </Section>
-        </>
-      )}
-      <Main>
-        {/* LEFT */}
-        <Left>
-          {/* 🟡 MINI ACTIVITY */}
-          <Section>
-            <SectionHeader>VEHICLE</SectionHeader>
-
-            <VehicleGrid>
-              <CarImage src={car.images?.[0] || "/placeholder-car.jpg"} />
-
-              <VehicleDetails>
-                <DetailRow>
-                  <Thirdheader>
-                    {car.year} {car.carMake} {car.model} {car.trim}
-                  </Thirdheader>
-                </DetailRow>
-                <DetailRow style={{ flexDirection: "column" }}>
-                  <DetailRow>
-                    <Label>VIN:</Label>{" "}
-                    <Thirdheader>{car.vinNumber || "N/A"}</Thirdheader>
-                  </DetailRow>
-                  <DetailRow>
-                    <Label>Stock #:</Label>{" "}
-                    <Thirdheader>{car._id.slice(-6).toUpperCase()}</Thirdheader>
-                  </DetailRow>
-                </DetailRow>
-
-                <PriceRow>
-                  <span>Asking: ${car.price?.toLocaleString()}</span>
-                  <span>Floor: ${(car.price * 0.9).toLocaleString()}</span>
-
-                  <ProfitBadge>
-                    Profit: ${(car.price * 0.1).toLocaleString()}
-                  </ProfitBadge>
-                </PriceRow>
-              </VehicleDetails>
-            </VehicleGrid>
-          </Section>
-
-          <MiniActivity>
-            <b>Recent Activity:</b>
-            <span> Ahmad viewed (2h ago)</span>
-            <span> • Price updated</span>
-          </MiniActivity>
-
-          {/* 🔥 TABS */}
-          <Tabs>
-            <Tab
-              active={activeTab === "leads"}
-              onClick={() => setActiveTab("leads")}
-            >
-              Leads
-            </Tab>
-            <Tab
-              active={activeTab === "activity"}
-              onClick={() => setActiveTab("activity")}
-            >
-              Activity
-            </Tab>
-            <Tab
-              active={activeTab === "docs"}
-              onClick={() => setActiveTab("docs")}
-            >
-              Documents
-            </Tab>
-          </Tabs>
-
-          {/* 🧠 TAB CONTENT */}
-          <Content>
-            {activeTab === "leads" && (
-              <div>
-                {/* 🔍 HEADER */}
-                <LeadsHeader>
-                  <SearchInput
-                    placeholder="Search lead..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                  />
-
-                  <FilterGroup>
-                    {["all", "hot", "warm", "cold"].map((f) => (
-                      <FilterBtn
-                        key={f}
-                        active={filter === f}
-                        onClick={() => setFilter(f)}
-                      >
-                        {f}
-                      </FilterBtn>
-                    ))}
-                  </FilterGroup>
-                </LeadsHeader>
-
-                {/* 📊 TABLE */}
-                <LeadsTable>
-                  <RowHeader>
-                    <span>Name</span>
-                    <span>Visits</span>
-                    <span>Last Seen</span>
-                    <span>Actions</span>
-                  </RowHeader>
-
-                  {[
-                    { name: "Ahmad", visits: 3, last: "2h ago", type: "hot" },
-                    { name: "Sarah", visits: 2, last: "1d ago", type: "warm" },
-                    { name: "Omar", visits: 1, last: "3d ago", type: "cold" },
-                  ]
-                    .filter((lead) =>
-                      lead.name.toLowerCase().includes(search.toLowerCase()),
-                    )
-                    .filter((lead) =>
-                      filter === "all" ? true : lead.type === filter,
-                    )
-                    .map((lead, i) => (
-                      <LeadRow key={i}>
-                        {/* NAME */}
-                        <div>
-                          <LeadName>
-                            {lead.name}
-                            <Badge type={lead.type}>{lead.type}</Badge>
-                          </LeadName>
-                          <LeadMeta>{lead.visits} visits</LeadMeta>
-                        </div>
-
-                        {/* VISITS */}
-                        <span>{lead.visits}</span>
-
-                        {/* LAST */}
-                        <span>{lead.last}</span>
-
-                        {/* ACTIONS */}
-                        <LeadActions>
-                          <Button size="small" variant="contained">
-                            Call
-                          </Button>
-                          <Button
-                            size="small"
-                            color="success"
-                            variant="contained"
-                          >
-                            WA
-                          </Button>
-                        </LeadActions>
-                      </LeadRow>
-                    ))}
-                </LeadsTable>
+          <TimelineBox>
+            <h3>Activity Timeline</h3>
+            <TimeItem>
+              <div className="dot"><WhatsApp fontSize="small"/></div>
+              <div className="content">
+                <div className="title">WhatsApp sent to <span style={{color:'#1e3a8a'}}>Zaid Al-Hariri</span></div>
+                <div className="meta">2 hours ago • By System Auto-Copilot</div>
               </div>
-            )}
+            </TimeItem>
+            <TimeItem>
+              <div className="dot" style={{ background: '#fee2e2', color: '#ef4444' }}><Bolt fontSize="small"/></div>
+              <div className="content">
+                <div className="title">Price dropped by <span style={{color:'#ef4444'}}>$200</span></div>
+                <div className="meta">Yesterday • Authorized by Manager</div>
+              </div>
+            </TimeItem>
+            <TimeItem>
+              <div className="dot"><Inventory fontSize="small"/></div>
+              <div className="content">
+                <div className="title">Car added to Active Inventory</div>
+                <div className="meta">12 days ago • By Admin</div>
+              </div>
+            </TimeItem>
+          </TimelineBox>
 
-            {activeTab === "activity" && (
-              <Timeline>
-                <Event>Client viewed car (2h ago)</Event>
-                <Event>Price updated</Event>
-                <Event>WhatsApp sent</Event>
-              </Timeline>
-            )}
+        </LeftCol>
 
-            {activeTab === "docs" && (
-              <Docs>
-                <DocItem>Customs.pdf</DocItem>
-                <DocItem>Inspection.pdf</DocItem>
-              </Docs>
-            )}
-          </Content>
-        </Left>
+        {/* RIGHT COLUMN */}
+        <RightCol>
+          
+          <AICard>
+            <h3><AutoAwesome fontSize="small"/> AI Copilot Strategy</h3>
+            <p>Zaid Al-Hariri has viewed this listing <strong>4x in 48 hours</strong> and checked the finance calculator. His session behavior suggests high emotional intent.</p>
+            <div className="rec">
+              "Send Zaid the 3-year extended warranty PDF. Mention it covers the mild-hybrid system specifically."
+            </div>
+            <button><AutoAwesome fontSize="small"/> Generate AI Reply</button>
+          </AICard>
 
-        {/* RIGHT (STICKY) */}
-        <Right>
-          {/* 💰 PRICING */}
-          <Card>
-            <CardHeader>PRICING & OPPORTUNITY</CardHeader>
-            <CardBody>
-              <StatRow>
-                <span>Asking</span>
-                <b>${car.price}</b>
-              </StatRow>
+          <LeadCard>
+            <div className="head">
+              <h3>Qualified Leads</h3>
+              <div className="badge">3 Serious Matches</div>
+            </div>
+            <LeadItem>
+              <div className="info">
+                <div className="name">Zaid Al-Hariri</div>
+                <div className="desc">⚡ High Interest • Viewed 4x</div>
+              </div>
+              <div style={{color: '#94a3b8', cursor: 'pointer'}}>⋮</div>
+            </LeadItem>
+            <LeadItem>
+              <div className="info">
+                <div className="name">Omar F.</div>
+                <div className="desc">🔋 EV Enthusiast • Finance Inquiry</div>
+              </div>
+              <div style={{color: '#94a3b8', cursor: 'pointer'}}>⋮</div>
+            </LeadItem>
+            <LeadItem>
+              <div className="info">
+                <div className="name">Laila Murad</div>
+                <div className="desc">🔄 Trade-in Candidate</div>
+              </div>
+              <div style={{color: '#94a3b8', cursor: 'pointer'}}>⋮</div>
+            </LeadItem>
+          </LeadCard>
 
-              <StatRow>
-                <span>Floor</span>
-                <b>${Math.floor(car.price * 0.9)}</b>
-              </StatRow>
+          <NegCard>
+            <h3>Negotiation Helper</h3>
+            <NegRow><span className="lbl">Landed Cost</span><span className="val">${car.landedCost || 74100}</span></NegRow>
+            <NegRow><span className="lbl">Current ROI Estimate</span><span className="val">11.3%</span></NegRow>
+            <div style={{ background: 'white', padding: 12, borderRadius: 8, marginTop: 16, display: 'flex', gap: 12 }}>
+              <div style={{ flex: 1, background: '#f1f5f9', padding: 8, borderRadius: 6, fontWeight: 700 }}>$79,000</div>
+              <div style={{ flex: 1, background: '#bbf7d0', color: '#166534', padding: 8, borderRadius: 6, fontWeight: 700, textAlign: 'center' }}>
+                Profit: $4.9k
+              </div>
+            </div>
+          </NegCard>
 
-              <StatRow>
-                <span>Profit</span>
-                <Green>${Math.floor(car.price * 0.1)}</Green>
-              </StatRow>
+          <DocCard>
+            <h3>Document Center</h3>
+            <DocRow>
+              <div className="info">
+                <div className="name">Customs_Paperwork_GLE.pdf</div>
+                <div className="meta">Attached via WhatsApp • 2MB</div>
+              </div>
+              <FileDownload className="icon" />
+            </DocRow>
+            <DocRow>
+              <div className="info">
+                <div className="name">Title_Deed_Registry.pdf</div>
+                <div className="meta">Attached via Email • 1.4MB</div>
+              </div>
+              <FileDownload className="icon" />
+            </DocRow>
+            <DocRow style={{ background: '#fef2f2', borderColor: '#fecaca' }}>
+              <div className="info">
+                <div className="name" style={{ color: '#ef4444' }}>Missing Customs Paper</div>
+                <div className="meta" style={{ color: '#ef4444' }}>Final export cleared, original missing.</div>
+              </div>
+            </DocRow>
+          </DocCard>
 
-              <StatRow>
-                <span>Days in Stock</span>
-                <b>{car.daysInStock}</b>
-              </StatRow>
-            </CardBody>
-          </Card>
+        </RightCol>
 
-          {/* ⚡ QUICK ACTIONS */}
-          <Card>
-            <CardHeader>QUICK ACTIONS</CardHeader>
-            <CardBody>
-              <Button fullWidth size="small">
-                Send Details
-              </Button>
-              <Button fullWidth size="small">
-                Send Images
-              </Button>
-              <Button fullWidth size="small">
-                Send Location
-              </Button>
-              <Button fullWidth size="small">
-                Print Tag
-              </Button>
-            </CardBody>
-          </Card>
+      </LayoutGrid>
 
-          {/* 🔥 HOT LEAD ALERTS */}
-          <Card>
-            <CardHeader>HOT LEAD ALERTS</CardHeader>
-            <CardBody>
-              <AlertItem>🔥 Viewed 3 times</AlertItem>
-              <AlertItem>⚠️ 30 days in stock</AlertItem>
-            </CardBody>
-          </Card>
-
-          {/* 📊 QUICK STATS */}
-          <Card>
-            <CardHeader>QUICK STATS</CardHeader>
-            <CardBody>
-              <StatRow>
-                <span>Views</span>
-                <b>120</b>
-              </StatRow>
-
-              <StatRow>
-                <span>Leads</span>
-                <b>8</b>
-              </StatRow>
-
-              <StatRow>
-                <span>Calls</span>
-                <b>3</b>
-              </StatRow>
-
-              <StatRow>
-                <span>WhatsApp</span>
-                <b>5</b>
-              </StatRow>
-            </CardBody>
-          </Card>
-        </Right>
-      </Main>
-    </Wrapper>
+    </PageContainer>
   );
 }
-
-export default Page;

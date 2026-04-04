@@ -20,11 +20,9 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={inter.className}>
-        <SmoothScrollProvider>
-          <SessionProviders session={session}>
-            <ThemeWrapper>{children}</ThemeWrapper>
-          </SessionProviders>
-        </SmoothScrollProvider>
+        <SessionProviders session={session}>
+          <ThemeWrapper>{children}</ThemeWrapper>
+        </SessionProviders>
         <GoogleAnalytics gaId="G-5ZN5XR28VX" />
       </body>
     </html>

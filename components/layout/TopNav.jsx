@@ -1,9 +1,10 @@
 "use client";
-
+import { useState } from "react";
 import styled from "@emotion/styled";
 import Link from "next/link";
-import { Notifications, Bolt, Person } from "@mui/icons-material";
+import { Notifications, Bolt, Person, QrCodeScanner } from "@mui/icons-material";
 import { usePathname } from "next/navigation";
+import DataIngestionModal from "../inventory/DataIngestionModal";
 
 const TopNavContainer = styled.header`
   height: 64px;
@@ -99,8 +100,28 @@ const Avatar = styled.div`
   border: 1px solid #cbd5e1;
 `;
 
+const PrimaryButton = styled.button`
+  background-color: #1e3a8a;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 0.9;
+  }
+`;
+
 export default function TopNav() {
   const pathname = usePathname();
+  const [modalOpen, setModalOpen] = useState(false);
 
   const links = [
     { name: "Inventory", href: "/inventory" },
@@ -110,32 +131,39 @@ export default function TopNav() {
   ];
 
   return (
-    <TopNavContainer>
-      <LeftSection>
-        <Brand>Precision Navigator CRM</Brand>
-        <SecondaryNav>
-          {links.map((link) => {
-             const isActive = pathname.startsWith(link.href);
-             return (
-               <NavItem key={link.name} href={link.href} $active={isActive}>
-                 {link.name}
-               </NavItem>
-             );
-          })}
-        </SecondaryNav>
-      </LeftSection>
-      <RightSection>
-        <IconButton>
-          <Notifications fontSize="small" />
-          <Badge />
-        </IconButton>
-        <IconButton>
-          <Bolt fontSize="small" />
-        </IconButton>
-        <Avatar>
-          <Person fontSize="small" />
-        </Avatar>
-      </RightSection>
-    </TopNavContainer>
+    <>
+      <TopNavContainer>
+        <LeftSection>
+          <Brand>Precision Navigator CRM</Brand>
+          <SecondaryNav>
+            {links.map((link) => {
+               const isActive = pathname.startsWith(link.href);
+               return (
+                 <NavItem key={link.name} href={link.href} $active={isActive}>
+                   {link.name}
+                 </NavItem>
+               );
+            })}
+          </SecondaryNav>
+        </LeftSection>
+        <RightSection>
+          <PrimaryButton onClick={() => setModalOpen(true)}>
+            <QrCodeScanner fontSize="small" /> Scan VIN
+          </PrimaryButton>
+          <IconButton>
+            <Notifications fontSize="small" />
+            <Badge />
+          </IconButton>
+          <IconButton>
+            <Bolt fontSize="small" />
+          </IconButton>
+          <Avatar>
+            <Person fontSize="small" />
+          </Avatar>
+        </RightSection>
+      </TopNavContainer>
+      
+      <DataIngestionModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
+    </>
   );
 }

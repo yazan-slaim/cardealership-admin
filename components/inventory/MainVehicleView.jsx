@@ -116,22 +116,24 @@ const GalleryPlaceholder = styled.div`
   position: relative;
 `;
 
-export default function MainVehicleView() {
+export default function MainVehicleView({ car }) {
+  if (!car) return <div>Loading...</div>;
+
   return (
     <div>
       <HeaderContainer>
         <TitleSection>
-          <Title>2024 Mercedes-Benz GLE 450</Title>
+          <Title>{car.year} {car.carMake} {car.model}</Title>
           <div style={{ color: "#64748b", fontSize: "1.2rem", fontWeight: 500 }}>
-            (M-Sport Trim)
+            ({car.trim || "Base Trim"})
           </div>
           <TagsRow style={{ marginTop: 8 }}>
-            <TextBadge>Stock: #AM-4229</TextBadge>
-            <TextBadge>VIN: W1N4JC5K8B...</TextBadge>
+            <TextBadge>Stock: #{car._id?.slice(-6).toUpperCase()}</TextBadge>
+            <TextBadge>VIN: {car.vinNumber || "N/A"}</TextBadge>
           </TagsRow>
           <TagsRow style={{ marginTop: 12 }}>
-            <Badge $bg="#22c55e" $color="white">READY FOR SALE</Badge>
-            <Badge $bg="#fee2e2" $color="#ef4444">🔥 HOT</Badge>
+            <Badge $bg="#22c55e" $color="white">{car.sold ? 'SOLD' : 'READY FOR SALE'}</Badge>
+            {car.statusLevel === 'HOT' && <Badge $bg="#fee2e2" $color="#ef4444">🔥 HOT</Badge>}
           </TagsRow>
         </TitleSection>
         
@@ -146,29 +148,32 @@ export default function MainVehicleView() {
       <MetricsGrid>
         <MetricBox>
           <MetricLabel>Asking Price</MetricLabel>
-          <MetricValue $color="#1d4ed8">JOD 82,500</MetricValue>
+          <MetricValue $color="#1d4ed8">${car.price?.toLocaleString() || 0}</MetricValue>
         </MetricBox>
         <MetricBox>
           <MetricLabel>Floor Price</MetricLabel>
-          <MetricValue>JOD 78,000</MetricValue>
+          <MetricValue>${Math.floor(car.price * 0.9).toLocaleString()}</MetricValue>
         </MetricBox>
         <MetricBox>
           <MetricLabel>Profit @ Ask</MetricLabel>
-          <MetricValue $color="#16a34a">JOD 8,400</MetricValue>
+          <MetricValue $color="#16a34a">${Math.floor(car.price * 0.1).toLocaleString()}</MetricValue>
         </MetricBox>
         <MetricBox>
           <MetricLabel>Days In Stock</MetricLabel>
-          <MetricValue>12 Days</MetricValue>
+          <MetricValue>{car.daysInStock || 0} Days</MetricValue>
         </MetricBox>
         <MetricBox>
           <MetricLabel>Lead Score</MetricLabel>
-          <MetricValue>94/100</MetricValue>
+          <MetricValue>{car.leadScore || 0}/100</MetricValue>
         </MetricBox>
       </MetricsGrid>
 
       <GalleryPlaceholder>
-        {/* We will replace this with real images later */}
-        Main Car Image Gallery Placeholder
+        {car.images?.length > 0 ? (
+          <img src={car.images[0]} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '12px' }} alt="Car" />
+        ) : (
+          "Main Car Image Gallery Placeholder"
+        )}
       </GalleryPlaceholder>
     </div>
   );
