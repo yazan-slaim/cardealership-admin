@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { ReactSortable } from "react-sortablejs";
 import styled from "styled-components";
+import VinScanner from "./VinScanner";
 
 const PageContainer = styled.div`
   font-family: Arial, sans-serif;
@@ -305,6 +306,9 @@ export default function PostProductPage({ product }) {
     interiorOptions: [],
     exteriorOptions: [],
   };
+
+  const [isLoadingVin, setIsLoadingVin] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
 
   const [car, setCar] = useState(initialCarState);
   const [carMakes, setCarMakes] = useState([]);
@@ -624,6 +628,44 @@ export default function PostProductPage({ product }) {
   const handleRemoveImage = (indexToRemove) => {
     setImages(images.filter((_, index) => index !== indexToRemove));
   };
+
+  const fetchVinDetails = async (vin) => {
+    const vinToUse = vin || car.vinNumber;
+    if (!vinToUse || vinToUse.length !== 17) {
+      alert("Please enter a valid 17-character VIN.");
+      return;
+    }
+
+    setIsLoadingVin(true);
+    try {
+      const response = await fetch(`/api/vin-decode?vin=${vinToUse.toUpperCase()}`);
+      const data = await response.json();
+
+      if (data.success && data.vehicle) {
+        const v = data.vehicle;
+        setCar((prev) => ({
+          ...prev,
+          vinNumber: vinToUse.toUpperCase(),
+          carMake: v.carMake || prev.carMake,
+          model: v.model || prev.model,
+          year: v.year || prev.year,
+          trim: v.trim || prev.trim,
+          engineSize: v.engineSize || prev.engineSize,
+          fuel: v.fuel || prev.fuel,
+          transmission: v.transmission || prev.transmission,
+          bodyType: v.bodyType || prev.bodyType,
+        }));
+      } else {
+        alert(data.error || "Failed to decode VIN.");
+      }
+    } catch (error) {
+      console.error("Error fetching VIN details:", error);
+      alert("Server error during VIN lookup.");
+    } finally {
+      setIsLoadingVin(false);
+    }
+  };
+
   async function postProduct() {
     if (product) {
       try {
@@ -932,8 +974,31 @@ export default function PostProductPage({ product }) {
                 <FloatingLabel htmlFor={partkey}>
                   {partkey.charAt(0).toUpperCase() + partkey.slice(1)}
                 </FloatingLabel>
+                {partkey === "vinNumber" && (
+                  <div style={{ position: "absolute", right: "10px", top: "10px", display: "flex", gap: "10px" }}>
+                    <SmallButton 
+                      type="button" 
+                      onClick={() => fetchVinDetails()}
+                      disabled={isLoadingVin}
+                    >
+                      {isLoadingVin ? "Fetching..." : "Fetch Details"}
+                    </SmallButton>
+                    <SmallButton 
+                      type="button"
+                      onClick={() => setShowScanner(true)}
+                    >
+                      Scan
+                    </SmallButton>
+                  </div>
+                )}
               </InputContainer>
             ))}
+            {showScanner && (
+              <VinScanner 
+                onScan={(vin) => fetchVinDetails(vin)} 
+                onClose={() => setShowScanner(false)} 
+              />
+            )}
             <InputContainer>
               <StyledLabel htmlFor="carMake">Car Make</StyledLabel>
               <StyledSelect

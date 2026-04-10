@@ -72,6 +72,7 @@ export default function Sidebar() {
     { name: "Lead Pipeline", href: "/leads", icon: <PeopleAlt /> },
     { name: "Documentation", href: "/docs", icon: <Description /> },
     { name: "Market Data", href: "/market", icon: <TrendingUp /> },
+    { name: "Sandbox Engine", href: "/sandbox", icon: <Settings /> },
   ];
 
   const secondaryLinks = [

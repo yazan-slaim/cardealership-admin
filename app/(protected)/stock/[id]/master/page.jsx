@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import styled from "@emotion/styled";
 import { 
+
   Phone, 
   WhatsApp, 
   AutoAwesome, 
@@ -10,8 +11,11 @@ import {
   Info, 
   FileDownload,
   DocumentScanner,
-  Inventory
+  Inventory,
+  CloudUpload,
+  Send
 } from "@mui/icons-material";
+import QualifiedLeads from "../../../../../components/inventory/QualifiedLeads";
 
 // --- GLOBAL LAYOUT --- 
 const PageContainer = styled.div`
@@ -283,6 +287,34 @@ const HealthWidget = styled.div`
 const TimelineBox = styled(Panel)`
   margin-top: 0;
 `;
+
+// --- SYNDICATION WIDGET ---
+const SyndicationWidget = styled(Panel)`
+  border: 2px solid #e2e8f0;
+  h3 { margin-bottom: 24px; }
+`;
+
+const InputGroup = styled.div`
+  display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px;
+  label { font-weight: 600; font-size: 0.85rem; color: #475569; }
+  input { 
+    padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; 
+    font-size: 0.95rem; 
+  }
+`;
+
+const ResultBox = styled.div`
+  background: #f1f5f9; padding: 16px; border-radius: 8px; font-family: monospace;
+  font-size: 0.9rem; color: #334155; margin-top: 16px; min-height: 50px;
+`;
+
+const ActionButton = styled.button`
+  background: #1e3a8a; color: white; border: none; padding: 12px 20px;
+  border-radius: 8px; font-weight: 700; width: 100%; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: 0.2s;
+  &:hover { opacity: 0.9; }
+`;
 const TimeItem = styled.div`
   display: flex;
   gap: 16px;
@@ -372,6 +404,86 @@ const DocRow = styled.div`
 export default function MasterStockDetail() {
   const { id } = useParams();
   const [car, setCar] = useState(null);
+
+  // Auto-Poster State
+  const [syndicateState, setSyndicateState] = useState(null);
+  const [syndicatePlatform, setSyndicatePlatform] = useState(null); // which platform is currently running
+  const [fbEmail, setFbEmail] = useState("");
+  const [fbPassword, setFbPassword] = useState("");
+  const [osEmail, setOsEmail] = useState("");
+  const [osPassword, setOsPassword] = useState("");
+
+  const triggerSyndicate = async (platform = 'both') => {
+    // Validate credentials based on platform
+    if ((platform === 'facebook' || platform === 'both') && (!fbEmail || !fbPassword)) {
+      setSyndicateState("Error: Please enter FB Email and Password!");
+      return;
+    }
+    if ((platform === 'opensooq' || platform === 'both') && (!osEmail || !osPassword)) {
+      setSyndicateState("Error: Please enter OpenSooq Email and Password!");
+      return;
+    }
+
+    const platformLabel = platform === 'facebook' ? 'Facebook' : platform === 'opensooq' ? 'OpenSooq' : 'Both Platforms';
+    setSyndicatePlatform(platform);
+    setSyndicateState(`Initializing ${platformLabel} Bot & Fetching Images...`);
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002'}/api/syndicate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          platform,
+          carId: car._id,
+          // Identification
+          title: car.title,
+          carMake: car.carMake,
+          model: car.model,
+          trim: car.trim,
+          year: car.year,
+          // Condition & History
+          condition: car.condition,
+          mileage: car.mileage,
+          paint: car.paint,
+          // Powertrain
+          fuel: car.fuel,
+          transmission: car.transmission,
+          engineSize: car.engineSize,
+          // Specs & Type
+          bodyType: car.bodyType,
+          color: car.color,
+          regionalSpecs: car.regionalSpecs,
+          specifications: car.specifications,
+          interiorOptions: car.interiorOptions,
+          exteriorOptions: car.exteriorOptions,
+          // Legals
+          carCustoms: car.carCustoms,
+          carLicense: car.carLicense,
+          insurance: car.insurance,
+          // Pricing
+          price: car.price,
+          paymentMethod: car.paymentMethod,
+          vinNumber: car.vinNumber,
+          // Media
+          images: car.images || [],
+          // Auth
+          fbEmail,
+          fbPassword,
+          osEmail,
+          osPassword
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSyndicateState(`✅ ${platformLabel}: Posted successfully!`);
+      } else {
+        setSyndicateState("Error: " + data.error);
+      }
+    } catch (err) {
+      setSyndicateState("Network Error reaching backend Puppeteer API.");
+    }
+    setSyndicatePlatform(null);
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -488,6 +600,82 @@ export default function MasterStockDetail() {
             </Panel>
           </TwinPanels>
 
+          <SyndicationWidget>
+            <h3><CloudUpload fontSize="small"/> Multi-Channel Headless Poster</h3>
+            <p style={{fontSize: '0.85rem', color: '#64748b', marginBottom: 16}}>
+              Authenticate to physically launch the Puppeteer Agent. It will download the car's S3 images directly to the bot's memory and automatically push the listing.
+            </p>
+
+            <div style={{ display: 'flex', gap: '16px' }}>
+              <div style={{ flex: 1 }}>
+                <InputGroup>
+                  <label>Facebook Email</label>
+                  <input type="text" value={fbEmail} onChange={e => setFbEmail(e.target.value)} placeholder="FB Email/Phone" />
+                </InputGroup>
+                <InputGroup>
+                  <label>Facebook Password</label>
+                  <input type="password" value={fbPassword} onChange={e => setFbPassword(e.target.value)} placeholder="FB Password" />
+                </InputGroup>
+              </div>
+              <div style={{ flex: 1 }}>
+                <InputGroup>
+                  <label>OpenSooq Email</label>
+                  <input type="text" value={osEmail} onChange={e => setOsEmail(e.target.value)} placeholder="OS Email/Phone" />
+                </InputGroup>
+                <InputGroup>
+                  <label>OpenSooq Password</label>
+                  <input type="password" value={osPassword} onChange={e => setOsPassword(e.target.value)} placeholder="OS Password" />
+                </InputGroup>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              <ActionButton 
+                onClick={() => triggerSyndicate('facebook')} 
+                disabled={syndicatePlatform !== null}
+                style={{ 
+                  background: syndicatePlatform === 'facebook' ? '#93c5fd' : '#1877F2', 
+                  flex: 1, 
+                  minWidth: '140px',
+                  opacity: syndicatePlatform !== null ? 0.7 : 1,
+                  cursor: syndicatePlatform !== null ? 'wait' : 'pointer'
+                }}
+              >
+                {syndicatePlatform === 'facebook' ? '⏳' : '📘'} Post to Facebook
+              </ActionButton>
+              <ActionButton 
+                onClick={() => triggerSyndicate('opensooq')} 
+                disabled={syndicatePlatform !== null}
+                style={{ 
+                  background: syndicatePlatform === 'opensooq' ? '#86efac' : '#16a34a', 
+                  flex: 1, 
+                  minWidth: '140px',
+                  opacity: syndicatePlatform !== null ? 0.7 : 1,
+                  cursor: syndicatePlatform !== null ? 'wait' : 'pointer'
+                }}
+              >
+                {syndicatePlatform === 'opensooq' ? '⏳' : '🟢'} Post to OpenSooq
+              </ActionButton>
+              <ActionButton 
+                onClick={() => triggerSyndicate('both')} 
+                disabled={syndicatePlatform !== null}
+                style={{ 
+                  background: syndicatePlatform === 'both' ? '#c4b5fd' : '#7c3aed', 
+                  flex: '1 0 100%',
+                  opacity: syndicatePlatform !== null ? 0.7 : 1,
+                  cursor: syndicatePlatform !== null ? 'wait' : 'pointer'
+                }}
+              >
+                {syndicatePlatform === 'both' ? '⏳' : <Send fontSize="small"/>} Post to Both Platforms
+              </ActionButton>
+            </div>
+            {(syndicateState) && (
+              <ResultBox>
+                {syndicateState}
+              </ResultBox>
+            )}
+          </SyndicationWidget>
+
           <TimelineBox>
             <h3>Activity Timeline</h3>
             <TimeItem>
@@ -527,33 +715,7 @@ export default function MasterStockDetail() {
             <button><AutoAwesome fontSize="small"/> Generate AI Reply</button>
           </AICard>
 
-          <LeadCard>
-            <div className="head">
-              <h3>Qualified Leads</h3>
-              <div className="badge">3 Serious Matches</div>
-            </div>
-            <LeadItem>
-              <div className="info">
-                <div className="name">Zaid Al-Hariri</div>
-                <div className="desc">⚡ High Interest • Viewed 4x</div>
-              </div>
-              <div style={{color: '#94a3b8', cursor: 'pointer'}}>⋮</div>
-            </LeadItem>
-            <LeadItem>
-              <div className="info">
-                <div className="name">Omar F.</div>
-                <div className="desc">🔋 EV Enthusiast • Finance Inquiry</div>
-              </div>
-              <div style={{color: '#94a3b8', cursor: 'pointer'}}>⋮</div>
-            </LeadItem>
-            <LeadItem>
-              <div className="info">
-                <div className="name">Laila Murad</div>
-                <div className="desc">🔄 Trade-in Candidate</div>
-              </div>
-              <div style={{color: '#94a3b8', cursor: 'pointer'}}>⋮</div>
-            </LeadItem>
-          </LeadCard>
+          <QualifiedLeads carId={id} carSummaryText={`${car.year || ''} ${car.carMake || ''} ${car.model || ''} (Stock #${car._id?.slice(-6).toUpperCase()})`} />
 
           <NegCard>
             <h3>Negotiation Helper</h3>
