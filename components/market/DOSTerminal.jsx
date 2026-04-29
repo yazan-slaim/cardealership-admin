@@ -3,6 +3,7 @@
 import React, { useState, useCallback } from "react";
 import styled from "@emotion/styled";
 import { css, keyframes } from "@emotion/react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from "recharts";
 import {
   TrendingUp,
   TrendingDown,
@@ -24,7 +25,9 @@ import {
   Timer,
   Star,
   Block,
+  QrCodeScanner,
 } from "@mui/icons-material";
+import VINScanner from "../scanner/VINScanner";
 
 // ════════════════════════════════════════════════════════════════════════
 // ANIMATIONS
@@ -678,6 +681,9 @@ export default function DOSTerminal() {
     opensooq: true,
   });
 
+  const [showForensics, setShowForensics] = useState(false);
+  const [forensicData, setForensicData] = useState(null);
+
   const toggleChannel = (ch) =>
     setChannels((prev) => ({ ...prev, [ch]: !prev[ch] }));
 
@@ -730,8 +736,15 @@ export default function DOSTerminal() {
       // Small delay for visual polish
       await new Promise((r) => setTimeout(r, 400));
 
+      // Merge annotated listings from stats into the listings array
+      // so Market Evidence panel shows price context badges
+      const enrichedListings = data.stats?.annotatedListings || data.listings || [];
+
       setResults({
-        market: data,
+        market: {
+          ...data,
+          listings: enrichedListings,
+        },
         risks,
         isEV,
         regulatory,
@@ -761,7 +774,7 @@ export default function DOSTerminal() {
             {loading ? "ENGINE ACTIVE" : "SYSTEM READY"}
           </StatusText>
           <span style={{ color: "#334155" }}>|</span>
-          <StatusText>ANTIGRAVITY v1.0</StatusText>
+          <StatusText>ANTIGRAVITY v2.0 — MSRP ANCHORED</StatusText>
           <span style={{ color: "#334155" }}>|</span>
           <StatusText>
             {new Date().toLocaleDateString("en-US", {
@@ -770,6 +783,26 @@ export default function DOSTerminal() {
               day: "numeric",
             })}
           </StatusText>
+          <div style={{ flex: 1 }} />
+          <button 
+            onClick={() => setShowForensics(true)}
+            style={{ 
+              background: 'rgba(59, 130, 246, 0.1)', 
+              border: '1px solid rgba(59, 130, 246, 0.4)', 
+              color: '#3b82f6', 
+              borderRadius: 6, 
+              padding: '4px 12px', 
+              fontSize: '0.7rem', 
+              fontWeight: 800, 
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6
+            }}
+          >
+            <QrCodeScanner sx={{ fontSize: 14 }} />
+            INGEST VIN FOR FORENSIC AUDIT
+          </button>
         </StatusBar>
       </TerminalHeader>
 
@@ -965,6 +998,135 @@ export default function DOSTerminal() {
 
                   <Divider />
 
+                  {/* ── MSRP Intelligence Section ──────────────────────── */}
+                  {results.market.stats?.msrp?.msrpAvailable && (
+                    <>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: 12, letterSpacing: 1 }}>
+                        MSRP ANCHOR — OFFICIAL PRICING INTELLIGENCE
+                      </div>
+                      <DataRow>
+                        <DataLabel>MSRP (New Price)</DataLabel>
+                        <DataValue>{results.market.stats.msrp.msrpNew?.toLocaleString()} JOD</DataValue>
+                      </DataRow>
+                      <DataRow>
+                        <DataLabel>Depreciated Book Value</DataLabel>
+                        <DataValue $color="#3b82f6">
+                          {results.market.stats.msrp.bookValue?.toLocaleString()} JOD
+                        </DataValue>
+                      </DataRow>
+                      <DataRow>
+                        <DataLabel>Market vs Book</DataLabel>
+                        <DataValue $color={results.market.stats.msrp.deltaPct < 0 ? '#22c55e' : '#ef4444'}>
+                          {results.market.stats.msrp.deltaPct > 0 ? '+' : ''}{results.market.stats.msrp.deltaPct}%
+                        </DataValue>
+                      </DataRow>
+                      <DataRow>
+                        <DataLabel>Signal</DataLabel>
+                        <Tag
+                          $bg={results.market.stats.msrp.signal === 'UNDERVALUED' ? 'rgba(34, 197, 94, 0.15)' : results.market.stats.msrp.signal === 'OVERPRICED' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(59, 130, 246, 0.15)'}
+                          $color={results.market.stats.msrp.signal === 'UNDERVALUED' ? '#22c55e' : results.market.stats.msrp.signal === 'OVERPRICED' ? '#ef4444' : '#3b82f6'}
+                          $border={results.market.stats.msrp.signal === 'UNDERVALUED' ? 'rgba(34, 197, 94, 0.3)' : results.market.stats.msrp.signal === 'OVERPRICED' ? 'rgba(239, 68, 68, 0.3)' : 'rgba(59, 130, 246, 0.3)'}
+                        >
+                          {results.market.stats.msrp.signal === 'UNDERVALUED' ? '🟢' : results.market.stats.msrp.signal === 'OVERPRICED' ? '🔴' : '🔵'} {results.market.stats.msrp.signal}
+                        </Tag>
+                      </DataRow>
+
+                      <Divider />
+
+                      <div
+                        style={{
+                          fontSize: "0.75rem",
+                          color: "#64748b",
+                          marginBottom: 12,
+                          letterSpacing: 1,
+                        }}
+                      >
+                        REGULATORY FLOOR (JCD 2026 MATRIX)
+                      </div>
+                      <DataRow>
+                        <DataLabel>Est. CIF Value</DataLabel>
+                        <DataValue>{results.market.stats.jcd.cifValue?.toLocaleString()} JOD</DataValue>
+                      </DataRow>
+                      <DataRow>
+                        <DataLabel>JCD Base Customs Value</DataLabel>
+                        <DataValue>{results.market.stats.jcd.baseCustomsValue?.toLocaleString()} JOD (After -{results.market.stats.jcd.appliedDepreciationPercentage}% Depr.)</DataValue>
+                      </DataRow>
+                      <DataRow>
+                        <DataLabel>Special Tax ({results.market.stats.jcd.specialTaxRateApplied}%)</DataLabel>
+                        <DataValue $color="#f59e0b">+{results.market.stats.jcd.specialTaxJOD?.toLocaleString()} JOD</DataValue>
+                      </DataRow>
+                      <DataRow>
+                        <DataLabel>Weight & Reg. Fees</DataLabel>
+                        <DataValue $color="#f59e0b">+{ (results.market.stats.jcd.weightFeeJOD + results.market.stats.jcd.registrationFeeJOD).toLocaleString() } JOD</DataValue>
+                      </DataRow>
+                      <DataRow>
+                        <DataLabel>Total Landed Cost</DataLabel>
+                        <DataValue $color="#ef4444" style={{ fontWeight: 800 }}>
+                          {results.market.stats.jcd.totalLandedCost?.toLocaleString()} JOD
+                        </DataValue>
+                      </DataRow>
+                      <Divider />
+
+                      <div
+                        style={{
+                          fontSize: "0.75rem",
+                          color: "#64748b",
+                          marginBottom: 12,
+                          letterSpacing: 1,
+                        }}
+                      >
+                        SABERMETRIC TARGETS (LIQUIDITY ENGINE)
+                      </div>
+                      <DataRow>
+                        <DataLabel>Liquidity Adjusted Retail</DataLabel>
+                        <DataValue>
+                          {results.market.stats.bid.adjustedRetailPrice?.toLocaleString()} JOD 
+                          {results.market.stats.bid.liquidityApplied && <span style={{ color: '#ef4444', marginLeft: 8, fontSize: '0.7rem' }}>(-3% LIQUIDITY MODIFIER)</span>}
+                        </DataValue>
+                      </DataRow>
+                      <DataRow>
+                        <DataLabel>Max Confident Bid</DataLabel>
+                        <DataValue $color="#22c55e" style={{ fontWeight: 800, fontSize: '1.2rem' }}>
+                          {results.market.stats.bid.maximumBid?.toLocaleString()} JOD
+                        </DataValue>
+                      </DataRow>
+                      <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: 4 }}>
+                        * Includes {results.market.stats.bid.breakdown.profitTarget?.toLocaleString()} JOD profit target & {results.market.stats.bid.breakdown.reconditioning?.toLocaleString()} JOD recond.
+                      </div>
+                      <Divider />
+
+                      <DataRow>
+                        <DataLabel>MSRP Signal (2026 Anchor)</DataLabel>
+                        <Tag
+                          $bg={results.market.stats.msrp.signal === 'UNDERVALUED' ? 'rgba(34, 197, 94, 0.15)' : results.market.stats.msrp.signal === 'OVERPRICED' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(59, 130, 246, 0.15)'}
+                          $color={results.market.stats.msrp.signal === 'UNDERVALUED' ? '#22c55e' : results.market.stats.msrp.signal === 'OVERPRICED' ? '#ef4444' : '#3b82f6'}
+                          $border={results.market.stats.msrp.signal === 'UNDERVALUED' ? 'rgba(34, 197, 94, 0.3)' : results.market.stats.msrp.signal === 'OVERPRICED' ? 'rgba(239, 68, 68, 0.3)' : 'rgba(59, 130, 246, 0.3)'}
+                        >
+                          {results.market.stats.msrp.signal === 'UNDERVALUED' ? '🟢' : results.market.stats.msrp.signal === 'OVERPRICED' ? '🔴' : '🔵'} {results.market.stats.msrp.signal}
+                        </Tag>
+                      </DataRow>
+                      <DataRow>
+                        <DataLabel>Projected Margin</DataLabel>
+                        <DataValue $color="#22c55e">
+                          +{results.market.stats.msrp.projectedMargin?.toLocaleString()} JOD ({results.market.stats.msrp.marginPct}%)
+                        </DataValue>
+                      </DataRow>
+                      {/* MSRP Explanation */}
+                      <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: '12px 0 0', lineHeight: 1.6, background: 'rgba(59, 130, 246, 0.05)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
+                        💡 {results.market.stats.msrp.explanation}
+                      </p>
+                      <Divider />
+                    </>
+                  )}
+                  {results.market.stats?.msrp && !results.market.stats.msrp.msrpAvailable && (
+                    <AlertBanner $type="warning">
+                      <Warning />
+                      <div>
+                        <strong>No MSRP Reference:</strong> This make/model is not in the official pricing database yet. Buy/sell targets are market-only estimates.
+                      </div>
+                    </AlertBanner>
+                  )}
+
                   {/* Market Intelligence Metrics */}
                   <div
                     style={{
@@ -993,6 +1155,71 @@ export default function DOSTerminal() {
                     <DataLabel>Avg Views / Listing</DataLabel>
                     <DataValue>{results.market.stats.avgViewsPerListing?.toLocaleString()}</DataValue>
                   </DataRow>
+                  {results.market.stats.avgDaysOnMarket > 0 && (
+                    <DataRow>
+                      <DataLabel>Avg Days on Market</DataLabel>
+                      <DataValue>{results.market.stats.avgDaysOnMarket}d</DataValue>
+                    </DataRow>
+                  )}
+                  {results.market.stats.capitalVelocity > 0 && (
+                    <DataRow>
+                      <DataLabel>Capital Velocity</DataLabel>
+                      <DataValue $color={results.market.stats.capitalVelocity > 50 ? '#22c55e' : results.market.stats.capitalVelocity > 20 ? '#f59e0b' : '#ef4444'}>
+                        {results.market.stats.capitalVelocity} views/day — {results.market.stats.capitalVelocity > 50 ? '🔥 HOT' : results.market.stats.capitalVelocity > 20 ? '🟡 WARM' : '❄️ COLD'}
+                      </DataValue>
+                    </DataRow>
+                  )}
+
+                  {/* ── Price Distribution Chart ──────────────── */}
+                  {results.market.listings?.length > 2 && (
+                    <>
+                      <Divider />
+                      <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: 12, letterSpacing: 1 }}>
+                        PRICE DISTRIBUTION
+                      </div>
+                      <div style={{ width: '100%', height: 180 }}>
+                        <ResponsiveContainer>
+                          <BarChart data={
+                            results.market.listings
+                              .filter(l => l.price)
+                              .sort((a, b) => a.price - b.price)
+                              .map((l, i) => ({ name: `#${i+1}`, price: l.price, source: l.source }))
+                          } margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+                            <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#475569' }} />
+                            <YAxis tick={{ fontSize: 10, fill: '#475569' }} tickFormatter={v => `${(v/1000).toFixed(0)}k`} />
+                            <Tooltip
+                              contentStyle={{ background: '#1e293b', border: '1px solid rgba(100,116,139,0.2)', borderRadius: 8, fontSize: '0.8rem' }}
+                              labelStyle={{ color: '#94a3b8' }}
+                              formatter={(v) => [`${v?.toLocaleString()} JOD`, 'Price']}
+                            />
+                            {results.market.stats?.median && (
+                              <ReferenceLine y={results.market.stats.median} stroke="#22c55e" strokeDasharray="3 3" label={{ value: 'Median', fill: '#22c55e', fontSize: 10 }} />
+                            )}
+                            <Bar dataKey="price" radius={[4, 4, 0, 0]}>
+                              {results.market.listings
+                                .filter(l => l.price)
+                                .sort((a, b) => a.price - b.price)
+                                .map((entry, i) => {
+                                  const median = results.market.stats?.median || 0;
+                                  const pct = median ? ((entry.price - median) / median) * 100 : 0;
+                                  let fill = '#3b82f6';
+                                  if (pct < -10) fill = '#22c55e';
+                                  else if (pct > 10) fill = '#ef4444';
+                                  else if (pct < -5) fill = '#10b981';
+                                  else if (pct > 5) fill = '#f59e0b';
+                                  return <Cell key={i} fill={fill} />;
+                                })}
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div style={{ display: 'flex', gap: 16, fontSize: '0.7rem', color: '#64748b', justifyContent: 'center', marginTop: 4 }}>
+                        <span>🟢 Below market</span>
+                        <span>🔵 At market</span>
+                        <span>🔴 Above market</span>
+                      </div>
+                    </>
+                  )}
                 </>
               ) : (
                 <AlertBanner $type="warning">
@@ -1351,7 +1578,7 @@ export default function DOSTerminal() {
                     padding: '16px',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '12px'
+                    gap: '10px'
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                       <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#22c55e' }}>
@@ -1362,10 +1589,38 @@ export default function DOSTerminal() {
                       </Tag>
                     </div>
                     
-                    <div style={{ fontSize: '0.85rem', color: '#e2e8f0', display: 'flex', gap: '12px' }}>
+                    {/* Price Context Badge */}
+                    {item.priceContext && (
+                      <div style={{
+                        fontSize: '0.72rem',
+                        padding: '4px 8px',
+                        borderRadius: '6px',
+                        background: item.priceContext.includes('below') ? 'rgba(34, 197, 94, 0.1)' 
+                          : item.priceContext.includes('above') ? 'rgba(239, 68, 68, 0.1)' 
+                          : 'rgba(59, 130, 246, 0.1)',
+                        color: item.priceContext.includes('below') ? '#22c55e' 
+                          : item.priceContext.includes('above') ? '#ef4444' 
+                          : '#3b82f6',
+                        fontWeight: 600,
+                        letterSpacing: 0.5,
+                      }}>
+                        {item.priceContext}
+                      </div>
+                    )}
+
+                    <div style={{ fontSize: '0.85rem', color: '#e2e8f0', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                       <span>📅 {item.year}</span>
-                      <span>🛣️ {item.mileage}</span>
+                      {item.mileage && <span>🛣️ {item.mileage}</span>}
+                      {item.condition && <span>📊 {item.condition}</span>}
+                      {item.color && <span>🎨 {item.color}</span>}
                     </div>
+
+                    {/* Context Reasons */}
+                    {item.contextReasons && (
+                      <p style={{ fontSize: '0.75rem', color: '#64748b', margin: 0, lineHeight: 1.5, fontStyle: 'italic' }}>
+                        {item.contextReasons}
+                      </p>
+                    )}
 
                     {item.description && (
                       <p style={{ 
@@ -1373,7 +1628,7 @@ export default function DOSTerminal() {
                         color: '#64748b', 
                         margin: 0, 
                         display: '-webkit-box',
-                        WebkitLineClamp: 3,
+                        WebkitLineClamp: 2,
                         WebkitBoxOrient: 'vertical',
                         overflow: 'hidden',
                         lineHeight: 1.5
@@ -1405,6 +1660,57 @@ export default function DOSTerminal() {
             </PanelBody>
           </Panel>
         </ResultsGrid>
+      )}
+      {/* ── FORENSIC OVERLAY ─────────────────────────────────────────── */}
+      {showForensics && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 10000, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ width: '100%', maxWidth: 500, position: 'relative' }}>
+            <button 
+              onClick={() => setShowForensics(false)}
+              style={{ position: 'absolute', top: -40, right: 0, background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 800 }}
+            >
+              [ CLOSE TERMINAL ]
+            </button>
+            <VINScanner 
+              onForensicsComplete={(data) => {
+                setForensicData(data);
+                // Optionally auto-search for the car found in forensics
+                if (data.analysis.tax) {
+                  setMake(data.analysis.audit.rawAudit.includes('Toyota') ? 'Toyota' : 'Toyota'); // Mock logic
+                  setModel('Camry');
+                  setYear('2022');
+                }
+              }} 
+            />
+            
+            {forensicData && (
+              <div style={{ marginTop: 20, background: '#111', border: '1px solid #222', borderRadius: 16, padding: 20, animation: `${fadeSlideIn} 0.4s ease-out` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 15 }}>
+                  <Shield style={{ color: forensicData.analysis.audit.riskTag === 'RED' ? '#ef4444' : '#22c55e' }} />
+                  <h3 style={{ margin: 0, fontSize: '1rem', color: '#fff' }}>FORENSIC RESULTS: {forensicData.analysis.audit.riskTag}</h3>
+                </div>
+                <ul style={{ margin: 0, paddingLeft: 20, color: '#94a3b8', fontSize: '0.85rem', lineHeight: 1.6 }}>
+                  {forensicData.analysis.audit.bullets.map((b, i) => <li key={i}>{b}</li>)}
+                </ul>
+                <div style={{ marginTop: 15, paddingTop: 15, borderTop: '1px solid #222', display: 'flex', justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={{ fontSize: '0.7rem', color: '#475569' }}>MAX CONFIDENT BID</div>
+                    <div style={{ fontSize: '1.2rem', color: '#22c55e', fontWeight: 800 }}>{forensicData.analysis.bid.maximumBid.toLocaleString()} JOD</div>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      setShowForensics(false);
+                      executeQuery();
+                    }}
+                    style={{ background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 8, padding: '0 20px', fontWeight: 600, cursor: 'pointer' }}
+                  >
+                    SYNC MARKET DATA
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </PageContainer>
   );
