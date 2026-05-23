@@ -23,9 +23,8 @@ const VINScanner = ({ onForensicsComplete }) => {
     setLoading(true);
     try {
       // Phase I & II: Ingest and execute forensic pipeline
-      // Note: In a real scenario, we'd gather the other required params (CC, Weight, etc.) 
-      // but for this terminal bridge, we simulate the evaluation trigger.
-      const response = await fetch('/api/vehicle/forensics', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002";
+      const response = await fetch(`${apiUrl}/api/vehicle/forensics`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

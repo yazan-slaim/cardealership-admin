@@ -88,7 +88,8 @@ export default function SandboxPage() {
     
     setPostingState("Initializing Headless Browser Backend...");
     try {
-      const res = await fetch("http://localhost:3002/api/syndicate", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002";
+      const res = await fetch(`${apiUrl}/api/syndicate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 

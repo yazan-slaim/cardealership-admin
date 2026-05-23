@@ -5,6 +5,7 @@ import MainVehicleView from "@/components/inventory/MainVehicleView";
 import AICopilotPanel from "@/components/inventory/AICopilotPanel";
 import QualifiedLeads from "@/components/inventory/QualifiedLeads";
 import NegotiationHelper from "@/components/inventory/NegotiationHelper";
+import LiveViewersWidget from "@/components/inventory/LiveViewersWidget";
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 
@@ -50,6 +51,7 @@ export default function InventoryDetail() {
         <MainVehicleView />
       </LeftColumn>
       <RightColumn className="right-content">
+        <LiveViewersWidget />
         <AICopilotPanel />
         <QualifiedLeads />
         <NegotiationHelper />

@@ -30,6 +30,47 @@ export const initialCarState = {
   totalLandedCost: 0,
   marketAverage: 0,
   precisionIndex: 0,
+  costs: {
+    auctionBidUsd: 0,
+    auctionFeesUsd: 0,
+    inlandTransportUsd: 0,
+    oceanFreightUsd: 0,
+    exchangeRate: 0.71,
+    customsDutyJod: 0,
+    clearanceAgentJod: 0,
+    storageDemurrageJod: 0,
+    deliveryOrderJod: 0,
+  },
+  reconditioning: {
+    partsCost: 0,
+    laborBodywork: 0,
+    laborMechanic: 0,
+    zarqaGatePass: 0,
+    towingAmman: 0,
+    totalReconBudget: 0,
+    actualReconSpend: 0,
+  },
+  overhead: {
+    marketingTurboFees: 0,
+    showroomRentAllocation: 0,
+    salesCommission: 0,
+    registrationFees: 0,
+  },
+  analytics: {
+    msrpOriginal: 0,
+    bookValueDepreciated: 0,
+    openSooqAverage: 0,
+    fahasScoreMultiplier: 1.0,
+    trueMarketValue: 0,
+    liquidationFloor: 0,
+    precisionIndex: 0,
+  },
+  financials: {
+    totalLandedCost: 0,
+    breakevenPrice: 0,
+    askingPrice: 0,
+    minManagerPrice: 0,
+  },
   vinNumber: "",
   paint: false,
   images: [],
@@ -78,11 +119,11 @@ export const initialCarState = {
 };
 
 export const mainSections = [
-  { title: "Basic Information" },
-  { title: "Options and Features" },
-  { title: "Money Related Information" },
-  { title: "Pages Information" },
-  { title: "Assets & Extras" },
+  { title: "1. Identity & Provenance" },
+  { title: "2. Technical Specs" },
+  { title: "3. Equipment & Features" },
+  { title: "4. Unit Economics" },
+  { title: "5. Media & Marketing" },
 ];
 
 export const TEXT_BLOCK = "text";

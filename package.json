@@ -23,6 +23,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dayjs": "^1.11.20",
+    "framer-motion": "^12.40.0",
     "gsap": "^3.14.2",
     "heatmap.js": "^2.0.5",
     "html2canvas": "^1.4.1",

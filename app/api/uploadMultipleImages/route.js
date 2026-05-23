@@ -14,17 +14,17 @@ export async function POST(request) {
   await ContainerClient.createIfNotExists({
     access: "container",
   });
-  for (const onefile of data) {
-    const file = data.get("file");
+  const files = data.getAll("file");
+  for (const file of files) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const imageUrl = file.type;
-    const parts = imageUrl.split("/");
-    const typePart = parts[parts.length - 1];
-    const newFilename = Date.now() + "." + typePart;
+    const contentType = file.type;
+    const parts = contentType.split("/");
+    const extension = parts[parts.length - 1];
+    const newFilename = `${Date.now()}-${Math.random().toString(36).substring(7)}.${extension}`;
     const blobClient = ContainerClient.getBlockBlobClient(newFilename);
     await blobClient.uploadData(buffer, {
-      blobHTTPHeaders: { blobContentType: typePart },
+      blobHTTPHeaders: { blobContentType: contentType },
     });
     const link = `https://${storageAccountName}.blob.core.windows.net/files/${newFilename}`;
     links.push(link);

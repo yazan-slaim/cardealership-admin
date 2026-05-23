@@ -700,7 +700,8 @@ export default function DOSTerminal() {
       setLoadingPhase("NODE ALPHA — Scanning marketplace endpoints...");
       setProgress(15);
 
-      const res = await fetch("http://localhost:3002/api/market-intelligence", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002";
+      const res = await fetch(`${apiUrl}/api/market-intelligence`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

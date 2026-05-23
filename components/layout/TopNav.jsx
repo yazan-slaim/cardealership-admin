@@ -2,7 +2,7 @@
 import { useState } from "react";
 import styled from "@emotion/styled";
 import Link from "next/link";
-import { Notifications, Bolt, Person, QrCodeScanner } from "@mui/icons-material";
+import { Notifications, Bolt, Person, QrCodeScanner, Add } from "@mui/icons-material";
 import { usePathname } from "next/navigation";
 import DataIngestionModal from "../inventory/DataIngestionModal";
 
@@ -119,6 +119,26 @@ const PrimaryButton = styled.button`
   }
 `;
 
+const PostCarButton = styled(Link)`
+  background-color: #10b981;
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 0.9;
+    color: white;
+  }
+`;
+
 export default function TopNav() {
   const pathname = usePathname();
   const [modalOpen, setModalOpen] = useState(false);
@@ -147,6 +167,9 @@ export default function TopNav() {
           </SecondaryNav>
         </LeftSection>
         <RightSection>
+          <PostCarButton href="/stock/post-product">
+            <Add fontSize="small" /> Post Car
+          </PostCarButton>
           <PrimaryButton onClick={() => setModalOpen(true)}>
             <QrCodeScanner fontSize="small" /> Scan VIN
           </PrimaryButton>
