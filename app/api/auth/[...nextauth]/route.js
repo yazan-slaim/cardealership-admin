@@ -60,6 +60,7 @@ export const authOptions = {
             name: emp.fullName || "",
             image: emp.profileImageUrl || null,
             role: emp.role || "agent",
+            dealershipId: emp.dealershipId ? emp.dealershipId.toString() : null,
           };
         } catch (e) {
           console.error("authorize error:", e);
@@ -97,6 +98,7 @@ export const authOptions = {
           name: emp.fullName,
           image: emp.profileImageUrl,
           role: emp.role,
+          dealershipId: emp.dealershipId ? emp.dealershipId.toString() : null,
         };
       }
 
@@ -107,6 +109,7 @@ export const authOptions = {
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        token.dealershipId = user.dealershipId;
       }
       return token;
     },
@@ -115,6 +118,7 @@ export const authOptions = {
       if (session.user) {
         session.user.id = token.id;
         session.user.role = token.role;
+        session.user.dealershipId = token.dealershipId;
 
         if (token.id && process.env.JWT_SECRET) {
           const apiToken = jwt.sign({ id: token.id }, process.env.JWT_SECRET, {

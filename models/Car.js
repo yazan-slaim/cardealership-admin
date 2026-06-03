@@ -33,6 +33,10 @@ const technologyPageSchema = new Schema({
 
 export const CarSchema = new Schema(
   {
+    dealershipId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Dealership'
+    },
     title: String,
     carMake: String,
     Featured: Boolean,

@@ -9,7 +9,7 @@ export default async function ProtectedLayout({ children }) {
   if (!session) redirect("/sign-in");
 
   return (
-    <CRMLayout>
+    <CRMLayout user={session.user}>
       {children}
     </CRMLayout>
   );

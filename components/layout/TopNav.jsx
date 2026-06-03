@@ -1,190 +1,137 @@
 "use client";
-import { useState } from "react";
-import styled from "@emotion/styled";
+import { useState, useRef, useEffect, useTransition } from "react";
 import Link from "next/link";
-import { Notifications, Bolt, Person, QrCodeScanner, Add } from "@mui/icons-material";
+import { Bell, Zap, User, ScanBarcode, Plus, LogOut, Globe, Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
 import DataIngestionModal from "../inventory/DataIngestionModal";
+import clsx from "clsx";
+import { signOut } from "next-auth/react";
+import { useTranslations, useLocale } from "next-intl";
+import { setLocale } from "@/app/actions/locale";
 
-const TopNavContainer = styled.header`
-  height: 64px;
-  background-color: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 24px;
-`;
-
-const LeftSection = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 32px;
-`;
-
-const Brand = styled.div`
-  font-weight: 700;
-  font-size: 1.1rem;
-  color: #1e3a8a; /* deep blue */
-  letter-spacing: -0.02em;
-  display: flex;
-  align-items: center;
-`;
-
-const SecondaryNav = styled.nav`
-  display: flex;
-  gap: 24px;
-
-  @media (max-width: 768px) {
-    display: none;
-  }
-`;
-
-const NavItem = styled(Link)`
-  text-decoration: none;
-  font-weight: 500;
-  font-size: 0.9rem;
-  color: ${(props) => (props.$active ? "#0f172a" : "#64748b")};
-  transition: color 0.2s ease;
-
-  &:hover {
-    color: #0f172a;
-  }
-`;
-
-const RightSection = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 16px;
-`;
-
-const IconButton = styled.button`
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: #64748b;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  padding: 8px;
-  transition: background-color 0.2s ease, color 0.2s ease;
-  position: relative;
-
-  &:hover {
-    background-color: #f1f5f9;
-    color: #0f172a;
-  }
-`;
-
-const Badge = styled.span`
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 8px;
-  height: 8px;
-  background-color: #ef4444; /* red */
-  border-radius: 50%;
-`;
-
-const Avatar = styled.div`
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background-color: #e2e8f0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #64748b;
-  cursor: pointer;
-  border: 1px solid #cbd5e1;
-`;
-
-const PrimaryButton = styled.button`
-  background-color: #1e3a8a;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 16px;
-  font-weight: 600;
-  font-size: 0.85rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: opacity 0.2s;
-
-  &:hover {
-    opacity: 0.9;
-  }
-`;
-
-const PostCarButton = styled(Link)`
-  background-color: #10b981;
-  color: white;
-  text-decoration: none;
-  border-radius: 8px;
-  padding: 8px 16px;
-  font-weight: 600;
-  font-size: 0.85rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: opacity 0.2s;
-
-  &:hover {
-    opacity: 0.9;
-    color: white;
-  }
-`;
-
-export default function TopNav() {
+export default function TopNav({ user, setSidebarOpen }) {
   const pathname = usePathname();
+  const t = useTranslations("TopNav");
+  const sidebarT = useTranslations("Sidebar");
+  const locale = useLocale();
+  const [isPending, startTransition] = useTransition();
   const [modalOpen, setModalOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const links = [
-    { name: "Inventory", href: "/inventory" },
-    { name: "Leads", href: "/leads" },
-    { name: "Sales", href: "/sales" },
-    { name: "Analytics", href: "/analytics" },
+    { name: sidebarT("Active Inventory"), href: "/stock" },
+    { name: sidebarT("Lead Pipeline"), href: "/enquiries" },
+    { name: sidebarT("Market Data"), href: "/market" },
   ];
+
+  const handleLanguageToggle = () => {
+    const nextLocale = locale === "en" ? "ar" : "en";
+    startTransition(async () => {
+      await setLocale(nextLocale);
+      window.location.reload();
+    });
+  };
 
   return (
     <>
-      <TopNavContainer>
-        <LeftSection>
-          <Brand>Precision Navigator CRM</Brand>
-          <SecondaryNav>
+      <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-6 shrink-0 z-50 relative">
+        <div className="flex items-center gap-2 md:gap-8">
+          <button 
+            onClick={() => setSidebarOpen(prev => !prev)}
+            className="lg:hidden p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
+          <div className="font-bold text-base md:text-lg text-blue-900 tracking-tight flex items-center">
+            {t("Brand")}
+          </div>
+          <nav className="hidden md:flex gap-6">
             {links.map((link) => {
                const isActive = pathname.startsWith(link.href);
                return (
-                 <NavItem key={link.name} href={link.href} $active={isActive}>
+                 <Link 
+                   key={link.name} 
+                   href={link.href}
+                   className={clsx(
+                     "text-sm font-medium transition-colors hover:text-slate-900",
+                     isActive ? "text-slate-900" : "text-slate-500"
+                   )}
+                 >
                    {link.name}
-                 </NavItem>
+                 </Link>
                );
             })}
-          </SecondaryNav>
-        </LeftSection>
-        <RightSection>
-          <PostCarButton href="/stock/post-product">
-            <Add fontSize="small" /> Post Car
-          </PostCarButton>
-          <PrimaryButton onClick={() => setModalOpen(true)}>
-            <QrCodeScanner fontSize="small" /> Scan VIN
-          </PrimaryButton>
-          <IconButton>
-            <Notifications fontSize="small" />
-            <Badge />
-          </IconButton>
-          <IconButton>
-            <Bolt fontSize="small" />
-          </IconButton>
-          <Avatar>
-            <Person fontSize="small" />
-          </Avatar>
-        </RightSection>
-      </TopNavContainer>
+          </nav>
+        </div>
+        <div className="flex items-center gap-2 md:gap-4">
+          <Link 
+            href="/stock/post-product"
+            className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg p-2 sm:px-4 sm:py-2 font-semibold text-sm flex items-center gap-2 transition-colors"
+            title={t("Post Car")}
+          >
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">{t("Post Car")}</span>
+          </Link>
+          <button 
+            onClick={() => setModalOpen(true)}
+            className="bg-blue-900 hover:bg-blue-800 text-white rounded-lg p-2 sm:px-4 sm:py-2 font-semibold text-sm flex items-center gap-2 transition-colors"
+            title={t("Scan VIN")}
+          >
+            <ScanBarcode className="w-4 h-4" />
+            <span className="hidden sm:inline">{t("Scan VIN")}</span>
+          </button>
+          
+          <button 
+            onClick={handleLanguageToggle}
+            disabled={isPending}
+            className="relative text-slate-500 hover:text-slate-900 hover:bg-slate-100 p-2 rounded-full transition-colors flex items-center gap-2 text-sm font-bold uppercase disabled:opacity-50"
+          >
+            <Globe className="w-5 h-5" />
+            {locale === "en" ? "عربي" : "EN"}
+          </button>
+
+          <button className="relative text-slate-500 hover:text-slate-900 hover:bg-slate-100 p-2 rounded-full transition-colors">
+            <Bell className="w-5 h-5" />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+          </button>
+          
+          <div className="relative" ref={dropdownRef}>
+            <button 
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="w-9 h-9 rounded-full bg-slate-100 border border-slate-300 flex items-center justify-center text-slate-700 cursor-pointer hover:bg-slate-200 transition-colors"
+            >
+              {user?.name ? user.name.charAt(0).toUpperCase() : <User className="w-4 h-4" />}
+            </button>
+            
+            {dropdownOpen && (
+              <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-slate-200 py-2 z-50 flex flex-col">
+                <div className="px-4 py-2 border-b border-slate-100 mb-2">
+                  <p className="text-sm font-semibold text-slate-900">{user?.name || t("CRM Admin")}</p>
+                  <p className="text-xs text-slate-500 truncate">{user?.email || "admin@precision.com"}</p>
+                </div>
+                
+                <button 
+                  onClick={() => signOut()}
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors text-left"
+                >
+                  <LogOut className="w-4 h-4" /> {t("Sign Out")}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
       
       <DataIngestionModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
     </>

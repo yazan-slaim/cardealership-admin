@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 const EmployeeSchema = new mongoose.Schema(
   {
+    dealershipId: { type: mongoose.Schema.Types.ObjectId, ref: 'Dealership', required: false, index: true },
     email: { type: String, required: true, unique: true },
     fullName: { type: String, required: true },
     passwordHash: { type: String, required: true },
@@ -13,7 +14,9 @@ const EmployeeSchema = new mongoose.Schema(
     hireDate: { type: Date, default: Date.now },
     totalSalesCount: { type: Number, default: 0 },
     totalRevenueGenerated: { type: Number, default: 0 },
-    tasks: [{ type: mongoose.Schema.Types.ObjectId, ref: "Task" }]
+    tasks: [{ type: mongoose.Schema.Types.ObjectId, ref: "Task" }],
+    inviteToken: { type: String, default: null },
+    inviteTokenExpires: { type: Date, default: null },
   },
   { timestamps: true }
 );

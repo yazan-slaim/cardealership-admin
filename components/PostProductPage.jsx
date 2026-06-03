@@ -22,17 +22,12 @@ import PageInfo from "./PostProduct/Sections/PageInfo";
 import AssetsExtras from "./PostProduct/Sections/AssetsExtras";
 
 // Lazy Loaded Components
-const VinScanner = dynamic(() => import("./VinScanner"), {
-  ssr: false,
-  loading: () => <p style={{ color: "white" }}>Loading Scanner...</p>,
-});
 
 export default function PostProductPage({ product }) {
   // State
   const [car, setCar] = useState(initialCarState);
   const [isLoadingVin, setIsLoadingVin] = useState(false);
   const [isLoadingModel, setIsLoadingModel] = useState(false);
-  const [showScanner, setShowScanner] = useState(false);
   const [carMakes, setCarMakes] = useState([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [activeSubIndex, setActiveSubIndex] = useState(0);
@@ -566,12 +561,10 @@ export default function PostProductPage({ product }) {
             carMakes={carMakes}
             isLoadingVin={isLoadingVin}
             isLoadingModel={isLoadingModel}
-            showScanner={showScanner}
             fields={phase1Fields}
             handleInputChange={handleInputChange}
             fetchVinDetails={fetchVinDetails}
             fetchModelLookup={fetchModelLookup}
-            setShowScanner={setShowScanner}
             handleCarSeerData={handleCarSeerData}
             startRemoteScan={startRemoteScan}
           />
@@ -685,7 +678,7 @@ export default function PostProductPage({ product }) {
             cursor: "pointer",
           }}
         >
-          {isAutofilling ? "✨ AI is thinking..." : "✨ Auto-Fill Empty Fields"}
+          {isAutofilling ? "AI is thinking..." : "Auto-Fill Empty Fields"}
         </Button>
         <button
           onClick={postProduct}
@@ -701,11 +694,11 @@ export default function PostProductPage({ product }) {
             transition: "all 0.2s"
           }}
         >
-          {product?._id ? "💾 UPDATE VEHICLE" : "🚀 PUBLISH VEHICLE"}
+          {product?._id ? "UPDATE VEHICLE" : "PUBLISH VEHICLE"}
         </button>
       </div>
 
-      {/* 📱 REMOTE SCAN MODAL */}
+      {/* REMOTE SCAN MODAL */}
       {scanSessionId && (
         <div style={{ 
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 

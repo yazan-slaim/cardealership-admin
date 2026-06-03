@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { connectMongoDB } from "@/lib/mongodb";
 import { Car } from "@/models/Car";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export async function POST(req) {
   try {
@@ -8,6 +10,9 @@ export async function POST(req) {
 
     // Establish Secure Link
     await connectMongoDB();
+
+    const session = await getServerSession(authOptions);
+    const dealershipId = session?.user?.dealershipId;
 
     // Map marketing sub-documents to ensure NoSQL schema integrity
     const pagesObject = {
@@ -18,6 +23,9 @@ export async function POST(req) {
     };
 
     const carMongodbData = { ...car, pages: pagesObject };
+    if (dealershipId) {
+      carMongodbData.dealershipId = dealershipId;
+    }
 
     // ====================================================================
     // BRANCH A: ASSET UPDATE PROTOCOL

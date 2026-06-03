@@ -1,5 +1,4 @@
 import React, { memo, useState } from "react";
-import VinScanner from "../../VinScanner";
 import CarSeerUpload from "../CarSeerUpload";
 import {
   Section,
@@ -30,7 +29,7 @@ const BasicInfo = ({
   return (
     <Section>
       <div style={{ gridColumn: "1 / -1", display: 'flex', gap: '16px', alignItems: 'center' }}>
-        <h3 style={{ margin: 0, color: '#0f172a', fontSize: '1.2rem', fontWeight: 800 }}>Primary Identity</h3>
+        <h3 style={{ margin: 0, color: '#0f172a', fontSize: '1.2rem', fontWeight: 800 }}>Carseer Upload</h3>
         <CarSeerUpload onParsedData={handleCarSeerData} />
       </div>
 
@@ -51,7 +50,6 @@ const BasicInfo = ({
           gap: '6px',
           minWidth: 'fit-content',
         }}>
-          <span style={{ fontSize: '1.1rem' }}>🔍</span>
           <span style={{ fontWeight: 800, color: '#0369a1', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             Model Search
           </span>
@@ -85,7 +83,7 @@ const BasicInfo = ({
             minWidth: '120px',
           }}
         >
-          {isLoadingModel ? "⏳ Looking up..." : "🚀 Lookup"}
+          {isLoadingModel ? "Looking up..." : "Lookup"}
         </SmallButton>
       </div>
 
@@ -93,10 +91,10 @@ const BasicInfo = ({
       <div style={{ gridColumn: "1 / -1", display: 'flex', gap: '12px', background: '#f8fafc', padding: '16px', borderRadius: '0px', border: '1px solid #e2e8f0', flexWrap: 'wrap' }}>
         <h4 style={{ margin: 0, color: '#475569', display: 'flex', alignItems: 'center', width: '120px' }}>Data Ingestion</h4>
         <SmallButton onClick={() => fetchVinDetails()} disabled={isLoadingVin} style={{ background: "#eff6ff", color: "#2563eb", borderColor: "#bfdbfe" }}>
-          {isLoadingVin ? "⏳ Running Pipeline..." : "⚡ Auto-Decode VIN"}
+          {isLoadingVin ? "Running Pipeline..." : "Auto-Decode VIN"}
         </SmallButton>
         <SmallButton onClick={startRemoteScan} style={{ background: "#faf5ff", color: "#7c3aed", borderColor: "#ddd6fe" }}>
-          📱 Remote Phone Scan
+          Remote Phone Scan
         </SmallButton>
       </div>
 
@@ -124,7 +122,7 @@ const BasicInfo = ({
                 fontSize: '1.2rem', fontWeight: 900,
                 color: car._pricingIntel.statusLevel === 'HOT' ? '#16a34a' : car._pricingIntel.statusLevel === 'HOLD' ? '#dc2626' : '#d97706',
               }}>
-                {car._pricingIntel.statusLevel === 'HOT' ? '🔥' : car._pricingIntel.statusLevel === 'HOLD' ? '🛑' : '⚡'} {car._pricingIntel.statusLevel}
+                {car._pricingIntel.statusLevel}
               </div>
             </div>
             <div style={{ textAlign: 'center' }}>
@@ -167,7 +165,7 @@ const BasicInfo = ({
                       }}
                     >
                       <div style={{ fontSize: '0.7rem', fontWeight: 700, color: isActive ? '#0f172a' : '#64748b' }}>
-                        {tierName} {isActive && "🎯"}
+                        {tierName}
                       </div>
                       <div style={{ fontSize: '1rem', fontWeight: 800, color: isActive ? '#0f172a' : '#334155', marginTop: '4px' }}>
                         {tierData.suggestedPrice?.toLocaleString()} JOD
@@ -215,11 +213,6 @@ const BasicInfo = ({
                     ? '#92400e'
                     : '#475569',
             }}>
-              <span style={{ fontSize: '1.2rem' }}>
-                {car._pricingIntel.dealerIntel.fuelRisk.includes('SAFE HAVEN') ? '🛡️' :
-                 car._pricingIntel.dealerIntel.fuelRisk.includes('HIGH VOLATILITY') ? '⚠️' :
-                 car._pricingIntel.dealerIntel.fuelRisk.includes('DEPRECIATING ASSET') ? '⛽' : 'ℹ️'}
-              </span>
               <div>
                 <span style={{ fontWeight: 800 }}>Fuel Sensitivity Analysis: </span>
                 {car._pricingIntel.dealerIntel.fuelRisk}
@@ -296,14 +289,14 @@ const BasicInfo = ({
                     onClick={() => fetchVinDetails()}
                     disabled={isLoadingVin}
                   >
-                    {isLoadingVin ? "⏳ Pipeline Running..." : "⚡ Auto-Decode VIN"}
+                    {isLoadingVin ? "Pipeline Running..." : "Auto-Decode VIN"}
                   </SmallButton>
                   <SmallButton
                     type="button"
-                    onClick={() => setShowScanner(true)}
+                    onClick={startRemoteScan}
                     red={true}
                   >
-                    Camera Scan
+                    Scan with Phone
                   </SmallButton>
                 </div>
               )}
@@ -317,14 +310,7 @@ const BasicInfo = ({
               placeholder={`Enter ${field.label}...`}
             />
 
-            {field.key === "vinNumber" && showScanner && (
-              <div style={{ gridColumn: '1 / -1', marginTop: '16px' }}>
-                <VinScanner
-                  onScan={(vin) => fetchVinDetails(vin)}
-                  onClose={() => setShowScanner(false)}
-                />
-              </div>
-            )}
+
           </InputContainer>
         );
       })}

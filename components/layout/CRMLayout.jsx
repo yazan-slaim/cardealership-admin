@@ -1,40 +1,20 @@
 "use client";
-
-import styled from "@emotion/styled";
+import { useState } from "react";
 import Sidebar from "./Sidebar";
 import TopNav from "./TopNav";
 
-const LayoutWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
-  background-color: #f1f5f9; /* default subtle background */
-  color: #0f172a;
-`;
+export default function CRMLayout({ children, user }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-const MainContent = styled.div`
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-`;
-
-const ContentArea = styled.main`
-  flex: 1;
-  overflow-y: auto;
-  padding: 32px;
-`;
-
-export default function CRMLayout({ children }) {
   return (
-    <LayoutWrapper>
-      <TopNav />
-      <MainContent>
-        <Sidebar />
-        <ContentArea id="main-content-scroll">
+    <div className="flex flex-col h-screen overflow-hidden bg-slate-50 text-slate-900">
+      <TopNav user={user} setSidebarOpen={setSidebarOpen} />
+      <div className="flex flex-1 overflow-hidden relative">
+        <Sidebar user={user} isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+        <main id="main-content-scroll" className="flex-1 overflow-y-auto p-4 md:p-8">
           {children}
-        </ContentArea>
-      </MainContent>
-    </LayoutWrapper>
+        </main>
+      </div>
+    </div>
   );
 }
