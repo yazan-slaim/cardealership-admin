@@ -314,7 +314,7 @@ export default function PostProductPage({ product }) {
 
   const startRemoteScan = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3002'}/api/scan/session`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002'}/api/scan/session`, {
         method: "POST"
       });
       const data = await res.json();
@@ -394,7 +394,7 @@ export default function PostProductPage({ product }) {
     if (isPolling && scanSessionId) {
       interval = setInterval(async () => {
         try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3002'}/api/scan/session/${scanSessionId}`);
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002'}/api/scan/session/${scanSessionId}`);
           const data = await res.json();
           if (data.status === 'completed' && data.vin) {
             setCar(prev => ({ ...prev, vinNumber: data.vin }));

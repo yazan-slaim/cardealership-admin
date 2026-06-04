@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Car, Users, PlusCircle, Bookmark, Star,
   MessageSquare, Briefcase, TrendingUp, Search,
-  Globe, Database, Shield, Settings
+  Globe, Database, Shield, Settings, HelpCircle, Plus
 } from "lucide-react";
 import clsx from "clsx";
 import { useTranslations, useLocale } from "next-intl";
@@ -76,58 +76,79 @@ export default function Sidebar({ user, isOpen, setIsOpen }) {
 
       <aside 
         className={clsx(
-          "bg-slate-50 flex flex-col h-[calc(100vh-64px)] shrink-0 overflow-y-auto custom-scrollbar transition-transform duration-300 z-40",
+          "bg-slate-50 flex flex-col h-screen shrink-0 overflow-y-auto custom-scrollbar transition-transform duration-300 z-40 border-r border-slate-200",
           // Desktop positioning
-          "lg:translate-x-0 lg:static lg:flex lg:w-64 lg:border-x lg:border-slate-200",
+          "lg:translate-x-0 lg:static lg:flex lg:w-72",
           // Mobile slide-out drawer positioning
-          "fixed top-16 bottom-0 w-64 shadow-xl lg:shadow-none",
-          isRtl ? "right-0 border-l border-r-0" : "left-0 border-r border-l-0",
+          "fixed top-0 bottom-0 w-72 shadow-xl lg:shadow-none",
+          isRtl ? "right-0 border-l border-r-0" : "left-0",
           // Show/Hide transitions
           isOpen 
             ? "translate-x-0" 
             : (isRtl ? "translate-x-full" : "-translate-x-full")
         )}
       >
-        <nav className="flex flex-col gap-6 px-4 py-6 flex-1">
-          {menuGroups.map((group, i) => (
-            <div key={i} className="flex flex-col gap-1">
-              <span className="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                {group.label}
-              </span>
-              {group.links.map((link) => {
-                const isActive = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href + "/"));
-                const Icon = link.icon;
-                return (
-                  <Link
-                    key={link.name}
-                    href={link.href}
-                    onClick={handleLinkClick}
-                    className={clsx(
-                      "flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                      isActive
-                        ? "bg-blue-50 text-blue-700"
-                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                    )}
-                  >
-                    <Icon
-                      className={clsx("w-5 h-5", isActive ? "text-blue-600" : "text-slate-400")}
-                    />
-                    {link.name}
-                  </Link>
-                );
-              })}
-            </div>
-          ))}
-        </nav>
+        <div className="flex flex-col flex-1 px-4 py-6">
+          
+          {/* New Listing Button */}
+          <Link
+             href="/stock/post-product"
+             onClick={handleLinkClick}
+             className="w-full bg-[#0f4098] hover:bg-blue-900 text-white rounded-lg py-2.5 px-4 flex items-center justify-center gap-2 text-sm font-semibold mb-6 transition-colors shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            {t("Add Vehicle")}
+          </Link>
+
+          {/* Main Navigation */}
+          <nav className="flex flex-col gap-6">
+            {menuGroups.map((group, i) => (
+              <div key={i} className="flex flex-col gap-1.5">
+                <span className="px-3 text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                  {group.label}
+                </span>
+                {group.links.map((link) => {
+                  const isActive = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href + "/"));
+                  const Icon = link.icon;
+                  return (
+                    <Link
+                      key={link.name}
+                      href={link.href}
+                      onClick={handleLinkClick}
+                      className={clsx(
+                        "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors",
+                        isActive
+                          ? "bg-white text-[#0f4098] shadow-sm border border-slate-100"
+                          : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                      )}
+                    >
+                      <Icon
+                        className={clsx("w-4 h-4", isActive ? "text-[#0f4098]" : "text-slate-400")}
+                      />
+                      {link.name}
+                    </Link>
+                  );
+                })}
+              </div>
+            ))}
+          </nav>
+        </div>
         
-        <div className="flex flex-col gap-1 px-4 py-4 mt-auto border-t border-slate-200 bg-slate-50 sticky bottom-0">
+        {/* Bottom Navigation */}
+        <div className="flex flex-col gap-1 px-4 py-6 mt-auto bg-slate-50 sticky bottom-0 border-t border-slate-200/50">
           <Link
             href="/settings"
             onClick={handleLinkClick}
-            className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors"
           >
-            <Settings className="w-5 h-5 text-slate-400" /> {t("Settings")}
+            <Settings className="w-4 h-4 text-slate-400" /> {t("Settings")}
           </Link>
+          <button
+            onClick={() => {}}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors text-left"
+          >
+            <HelpCircle className="w-4 h-4 text-slate-400" /> {t("Support") || "Support"}
+          </button>
         </div>
       </aside>
     </>

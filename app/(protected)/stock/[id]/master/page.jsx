@@ -557,7 +557,7 @@ export default function MasterStockDetail() {
       });
       const data = await res.json();
       if (data.success) {
-        setSyndicateState(`✅ ${platformLabel}: Posted successfully!`);
+        setSyndicateState(`Posted successfully!`);
       } else {
         setSyndicateState("Error: " + data.error);
       }
@@ -716,7 +716,7 @@ export default function MasterStockDetail() {
 
   const startRemoteScan = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3002'}/api/scan/session`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002'}/api/scan/session`, {
         method: "POST"
       });
       const data = await res.json();
@@ -800,7 +800,7 @@ export default function MasterStockDetail() {
     if (isPolling && scanSessionId) {
       interval = setInterval(async () => {
         try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3002'}/api/scan/session/${scanSessionId}`);
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002'}/api/scan/session/${scanSessionId}`);
           const data = await res.json();
           if (data.status === 'completed' && data.vin) {
             handleInputChange('vinNumber', data.vin);
@@ -1068,7 +1068,7 @@ export default function MasterStockDetail() {
                   cursor: syndicatePlatform !== null ? 'wait' : 'pointer'
                 }}
               >
-                {syndicatePlatform === 'facebook' ? '⏳' : '📘'} Post to Facebook
+                {syndicatePlatform === 'facebook' ? 'Posting...' : 'Post to Facebook'}
               </ActionButton>
               <ActionButton 
                 onClick={() => triggerSyndicate('opensooq')} 
@@ -1081,7 +1081,7 @@ export default function MasterStockDetail() {
                   cursor: syndicatePlatform !== null ? 'wait' : 'pointer'
                 }}
               >
-                {syndicatePlatform === 'opensooq' ? '⏳' : '🟢'} Post to OpenSooq
+                {syndicatePlatform === 'opensooq' ? 'Posting...' : 'Post to OpenSooq'}
               </ActionButton>
               <ActionButton 
                 onClick={() => triggerSyndicate('both')} 
@@ -1093,7 +1093,7 @@ export default function MasterStockDetail() {
                   cursor: syndicatePlatform !== null ? 'wait' : 'pointer'
                 }}
               >
-                {syndicatePlatform === 'both' ? '⏳' : <Send fontSize="small"/>} Post to Both Platforms
+                {syndicatePlatform === 'both' ? 'Posting...' : <Send fontSize="small"/>} Post to Both Platforms
               </ActionButton>
             </div>
             {(syndicateState) && (
@@ -1156,7 +1156,7 @@ export default function MasterStockDetail() {
                       
                       {/* Icon */}
                       <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#1e3a8a', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, zIndex: 1, fontSize: '1rem' }}>
-                        ⚡
+                        <Bolt fontSize="small" />
                       </div>
 
                       {/* Content Card */}
@@ -1251,7 +1251,7 @@ export default function MasterStockDetail() {
                   <div className="name" onClick={() => window.open(file.url)} style={{ cursor: 'pointer', textDecoration: 'underline' }}>{file.name}</div>
                   <div className="meta">{file.fileType?.toUpperCase() || 'DOCUMENT'} • {new Date(file.createdAt).toLocaleDateString()}</div>
                 </div>
-                <div className="icon" onClick={() => deleteDoc(file._id)} style={{ color: '#ef4444' }}>🗑️</div>
+                <div className="icon" onClick={() => deleteDoc(file._id)} style={{ color: '#ef4444' }}>Del</div>
               </DocRow>
             )) : (
               <div style={{ fontSize: '0.85rem', color: '#64748b', textAlign: 'center', padding: '20px 0' }}>
@@ -1355,7 +1355,7 @@ export default function MasterStockDetail() {
 
       </LayoutGrid>
 
-      {/* 📱 REMOTE SCAN MODAL */}
+      {/* REMOTE SCAN MODAL */}
       {scanSessionId && (
         <div style={{ 
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
@@ -1391,7 +1391,7 @@ export default function MasterStockDetail() {
         </div>
       )}
 
-      {/* 🌡️ HEATMAP MODAL */}
+      {/* HEATMAP MODAL */}
       {heatmapVisible && (
         <div style={{ 
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 

@@ -159,7 +159,13 @@ export default function ProductsPage({ collection }) {
                        </span>
                     )}
                   </td>
-                  <td className="px-6 py-4 text-end">
+                  <td className="px-6 py-4 text-end flex items-center justify-end gap-2">
+                    <Link 
+                      href={`/stock/${row._id}/master`}
+                      className="text-xs px-3 py-1.5 rounded-md font-medium transition-colors border bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
+                    >
+                      Master Page
+                    </Link>
                     <button 
                       onClick={() => toggleSoldStatus(row)}
                       className={clsx(

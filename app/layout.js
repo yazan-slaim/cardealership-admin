@@ -7,12 +7,13 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getLocale } from "next-intl/server";
+import NextTopLoader from 'nextjs-toploader';
 
 const inter = Inter({ subsets: ["latin"] });
 const cairo = Cairo({ subsets: ["arabic", "latin"] });
 
 export const metadata = {
-  title: "Precision Navigator CRM",
+  title: "MOTIO CRM",
   description: "Advanced Automotive Intelligence Platform",
 };
 
@@ -26,6 +27,7 @@ export default async function RootLayout({ children }) {
   return (
     <html lang={locale} dir={isRtl ? 'rtl' : 'ltr'}>
       <body className={fontClass}>
+        <NextTopLoader color="#0f4098" showSpinner={false} />
         <NextIntlClientProvider messages={messages} locale={locale}>
           <SessionProviders session={session}>
             <ThemeWrapper>{children}</ThemeWrapper>

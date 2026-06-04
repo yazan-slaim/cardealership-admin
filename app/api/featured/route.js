@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { connectMongoDB } from "@/lib/mongodb";
-import { Reviw } from "@/models/Reviw";
+import Review from "@/models/Review";
 
 export async function POST(req) {
   try {
     const { title, author, stars, review } = await req.json();
     await connectMongoDB();
-    const newReview = await Reviw.create({ title, author, stars, review });
+    const newReview = await Review.create({ title, author, stars, review });
     await newReview.save();
     return NextResponse.json(
       { message: "Review created successfully!", review: newReview },
