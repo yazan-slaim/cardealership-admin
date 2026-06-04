@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Search, Filter, MapPin, MessageSquare, MoreVertical } from "lucide-react";
+import { Search, Filter, MapPin, MessageSquare, MoreVertical, Zap } from "lucide-react";
 import clsx from "clsx";
 
 export default function ClientsPage() {
@@ -11,7 +11,8 @@ export default function ClientsPage() {
   useEffect(() => {
     const fetchClients = async () => {
       try {
-        const res = await fetch("/api/clients/getclients");
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002";
+        const res = await fetch(`${apiUrl}/api/clients/getclients`);
         const data = await res.json();
         setClients(Array.isArray(data) ? data : []);
       } catch (err) {
