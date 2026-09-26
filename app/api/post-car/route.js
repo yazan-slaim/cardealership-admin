@@ -3,6 +3,7 @@ import { connectMongoDB } from "@/lib/mongodb";
 import { Car } from "@/models/Car";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { logActivity } from "@/lib/logActivity";
 
 export async function POST(req) {
   try {
@@ -46,6 +47,15 @@ export async function POST(req) {
       Object.assign(existingCar, carMongodbData);
       await existingCar.save();
 
+      logActivity({
+        type: "car_updated",
+        carId: id,
+        metadata: {
+          contentPreview: `Updated listing — ${existingCar.carMake || ""} ${existingCar.model || ""}`.trim(),
+        },
+        source: "employee",
+      });
+
       return NextResponse.json({
         success: true,
         message: "Asset updated and Sabermetrics recalculated.",
@@ -57,6 +67,15 @@ export async function POST(req) {
     else {
       const newCar = new Car(carMongodbData);
       await newCar.save();
+
+      logActivity({
+        type: "car_added",
+        carId: newCar._id.toString(),
+        metadata: {
+          contentPreview: `New listing added — ${newCar.carMake || ""} ${newCar.model || ""}`.trim(),
+        },
+        source: "employee",
+      });
 
       return NextResponse.json({
         success: true,
@@ -86,6 +105,15 @@ export async function PUT(req) {
 
     existingCar.sold = sold;
     await existingCar.save();
+
+    logActivity({
+      type: "car_status_changed",
+      carId: id,
+      metadata: {
+        contentPreview: `${existingCar.carMake || "Vehicle"} ${existingCar.model || ""} marked as ${sold ? "sold" : "available"}`.trim(),
+      },
+      source: "employee",
+    });
 
     return NextResponse.json({
       success: true,

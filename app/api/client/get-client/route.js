@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { connectMongoDB } from "@/lib/mongodb";
 import { Client } from "@/models/Client";
 import mongoose from "mongoose";
-import enquiry from "@/models/Enquiry";
+import { Enquiry } from "@/models/Enquiry";
+import SoldCar from "@/models/SoldCar";
+import { getDealershipScope } from "@/lib/getDealershipScope";
 export async function GET(req) {
   try {
     // Step 1: Connect to DB
@@ -37,7 +39,8 @@ export async function GET(req) {
     let client = null;
 
     try {
-      client = await Client.findById(id);
+      const scopeFilter = await getDealershipScope();
+      client = await Client.findOne({ _id: id, ...scopeFilter });
       console.log(client);
     } catch (err) {
       console.error("[DB ERROR - findById]", err);
@@ -87,6 +90,7 @@ export async function GET(req) {
       console.error("[POPULATE ERROR] tasks with assignedTo/createdBy", err);
     }
 
+    const objectId = new mongoose.Types.ObjectId(id);
     const [enquiryCount, salesCount, revenueData] = await Promise.all([
       Enquiry.countDocuments({ client: objectId }),
       SoldCar.countDocuments({ buyer: objectId }),

@@ -2,6 +2,7 @@ import mongoose, { Schema, model, models } from "mongoose";
 
 export const TaskSchema = new Schema(
   {
+    dealershipId: { type: Schema.Types.ObjectId, ref: "Dealership", index: true },
     title: {
       type: String,
       required: true,
@@ -18,6 +19,10 @@ export const TaskSchema = new Schema(
     relatedCar: {
       type: Schema.Types.ObjectId,
       ref: "Car",
+    },
+    relatedFleet: {
+      type: Schema.Types.ObjectId,
+      ref: "Fleet",
     },
     relatedClient: {
       type: Schema.Types.ObjectId,

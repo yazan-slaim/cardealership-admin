@@ -14,6 +14,7 @@ const EmployeeSchema = new mongoose.Schema(
     hireDate: { type: Date, default: Date.now },
     totalSalesCount: { type: Number, default: 0 },
     totalRevenueGenerated: { type: Number, default: 0 },
+    totalRentalsHandled: { type: Number, default: 0 },
     tasks: [{ type: mongoose.Schema.Types.ObjectId, ref: "Task" }],
     inviteToken: { type: String, default: null },
     inviteTokenExpires: { type: Date, default: null },

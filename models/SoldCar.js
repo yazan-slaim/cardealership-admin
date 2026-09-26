@@ -2,6 +2,7 @@ import mongoose, { Schema, Types } from "mongoose";
 
 const soldCarSchema = new Schema(
   {
+    dealershipId: { type: Types.ObjectId, ref: "Dealership", index: true },
     agent: { type: Types.ObjectId, ref: "Employee", required: true },
 
     car: { type: Types.ObjectId, ref: "Car", required: true },

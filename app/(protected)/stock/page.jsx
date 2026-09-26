@@ -4,16 +4,16 @@ import ProductsPage from "@/components/ProductsPage";
 
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { getDealershipScope } from "@/lib/getDealershipScope";
 
 export default async function page() {
   await connectMongoDB();
 
   const session = await getServerSession(authOptions);
-  const dealershipId = session?.user?.dealershipId;
-  const filter = dealershipId ? { dealershipId } : {};
+  const scopeFilter = await getDealershipScope(session);
 
   const mongocars = await Car.find(
-    filter,
+    scopeFilter,
     "title price images createdAt carMake sold"
   ).sort({ createdAt: -1 });
 

@@ -19,7 +19,17 @@
     "Sandbox Engine": "محرك الاختبار",
     "Agents": "الوكلاء",
     "Settings": "الإعدادات",
-    "Support": "الدعم"
+    "Support": "الدعم",
+    "Fleet Management": "إدارة الأسطول",
+    "Fleet": "الأسطول",
+    "Maintenance": "الصيانة",
+    "Bookings": "الحجوزات",
+    "All Bookings": "جميع الحجوزات",
+    "Active Rentals": "الإيجارات النشطة",
+    "Customers & Revenue": "العملاء والإيرادات",
+    "Customers": "العملاء",
+    "Invoices": "الفواتير",
+    "Enquiries": "الاستفسارات"
   },
   "TopNav": {
     "Brand": "Motio",

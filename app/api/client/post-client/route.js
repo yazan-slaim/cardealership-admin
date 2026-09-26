@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { connectMongoDB } from '@/lib/mongodb';
 import { Client } from '@/models/Client';
+import { logActivity } from '@/lib/logActivity';
+import { getDealershipId } from '@/lib/getDealershipScope';
+
 export async function POST(req) {
   try {
     const {
@@ -16,8 +19,10 @@ export async function POST(req) {
     } = await req.json();
 
     await connectMongoDB();
+    const dealershipId = await getDealershipId();
 
     const newClient = await Client.create({
+      dealershipId,
       fullName,
       email,
       phoneNumber,
@@ -27,6 +32,17 @@ export async function POST(req) {
       status,
       assignedAgent,
       files
+    });
+
+    logActivity({
+      type: "lead_created",
+      clientId: newClient._id.toString(),
+      metadata: {
+        contentPreview: `New lead added — ${fullName || "Unknown"} via ${leadSource || "direct"}`,
+      },
+      performedBy: assignedAgent || undefined,
+      performedByModel: assignedAgent ? "Employee" : undefined,
+      source: "employee",
     });
 
     return NextResponse.json(

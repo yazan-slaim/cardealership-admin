@@ -1,14 +1,31 @@
 import { NextResponse } from "next/server";
 import { connectMongoDB } from "@/lib/mongodb";
 import { Enquiry } from "@/models/Enquiry";
+import { logActivity } from "@/lib/logActivity";
+import { getDealershipScope, getDealershipId } from "@/lib/getDealershipScope";
 
 // POST - Create a new enquiry
 export async function POST(req) {
   try {
     await connectMongoDB();
     const body = await req.json();
+    
+    const dealershipId = await getDealershipId();
+    if (dealershipId) {
+      body.dealershipId = dealershipId;
+    }
+
     const newEnquiry = new Enquiry(body);
     const savedEnquiry = await newEnquiry.save();
+
+    logActivity({
+      type: "enquiry_created",
+      metadata: {
+        contentPreview: `New enquiry from ${body.name || body.fullName || "Customer"} — ${body.subject || body.carTitle || "General"}`,
+      },
+      source: "client",
+    });
+
     return NextResponse.json(savedEnquiry, { status: 201 });
   } catch (error) {
     return NextResponse.json(
@@ -21,8 +38,10 @@ export async function PUT(req) {
   try {
     await connectMongoDB();
     const { id, cleared } = await req.json();
-    const enquiry = await Enquiry.findByIdAndUpdate(
-      id,
+    const scopeFilter = await getDealershipScope();
+
+    const enquiry = await Enquiry.findOneAndUpdate(
+      { _id: id, ...scopeFilter },
       { cleared },
       { new: true }
     );
@@ -30,6 +49,14 @@ export async function PUT(req) {
     if (!enquiry) {
       return NextResponse.json({ error: "Enquiry not found" }, { status: 404 });
     }
+
+    logActivity({
+      type: "enquiry_cleared",
+      metadata: {
+        contentPreview: `Enquiry from ${enquiry.name || enquiry.fullName || "Customer"} marked as ${cleared ? "cleared" : "uncleared"}`,
+      },
+      source: "employee",
+    });
 
     return NextResponse.json(enquiry);
   } catch (error) {
@@ -46,9 +73,10 @@ export async function GET(req) {
 
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
+    const scopeFilter = await getDealershipScope();
 
     if (id) {
-      const enquiry = await Enquiry.findById(id);
+      const enquiry = await Enquiry.findOne({ _id: id, ...scopeFilter });
       if (!enquiry) {
         return NextResponse.json(
           { error: "Enquiry not found" },
@@ -57,7 +85,7 @@ export async function GET(req) {
       }
       return NextResponse.json(enquiry);
     } else {
-      const enquiries = await Enquiry.find();
+      const enquiries = await Enquiry.find(scopeFilter);
       return NextResponse.json(enquiries);
     }
   } catch (error) {
@@ -83,7 +111,8 @@ export async function DELETE(req) {
       );
     }
 
-    const deletedEnquiry = await Enquiry.findByIdAndDelete(id);
+    const scopeFilter = await getDealershipScope();
+    const deletedEnquiry = await Enquiry.findOneAndDelete({ _id: id, ...scopeFilter });
 
     if (!deletedEnquiry) {
       return NextResponse.json({ error: "Enquiry not found" }, { status: 404 });

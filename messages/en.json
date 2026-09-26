@@ -19,7 +19,17 @@
     "Sandbox Engine": "Sandbox Engine",
     "Agents": "Agents",
     "Settings": "Settings",
-    "Support": "Support"
+    "Support": "Support",
+    "Fleet Management": "Fleet Management",
+    "Fleet": "Fleet",
+    "Maintenance": "Maintenance",
+    "Bookings": "Bookings",
+    "All Bookings": "All Bookings",
+    "Active Rentals": "Active Rentals",
+    "Customers & Revenue": "Customers & Revenue",
+    "Customers": "Customers",
+    "Invoices": "Invoices",
+    "Enquiries": "Enquiries"
   },
   "TopNav": {
     "Brand": "Motio",

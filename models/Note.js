@@ -1,6 +1,11 @@
 import mongoose from 'mongoose';
 
 const noteSchema = new mongoose.Schema({
+  dealershipId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Dealership',
+    index: true,
+  },
   author: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Employee', // updated here

@@ -6,6 +6,11 @@ const dealershipSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
+  businessType: {
+    type: String,
+    enum: ['dealership', 'rental'],
+    default: 'dealership',
+  },
   subdomain: {
     type: String,
     required: true,
@@ -32,6 +37,16 @@ const dealershipSchema = new mongoose.Schema({
     email: String,
     address: String,
     whatsapp: String,
+  },
+  // Rental-specific defaults (only used when businessType === 'rental')
+  rentalConfig: {
+    currency: { type: String, default: 'JOD' },
+    lateFeePerDay: { type: Number, default: 0 },
+    depositPercent: { type: Number, default: 20 },
+    businessHours: {
+      open: { type: String, default: '08:00' },
+      close: { type: String, default: '20:00' },
+    },
   },
   isActive: {
     type: Boolean,

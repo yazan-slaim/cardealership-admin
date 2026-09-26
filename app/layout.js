@@ -2,6 +2,7 @@ import { Inter, Cairo } from "next/font/google";
 import "./globals.css";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import ThemeWrapper from "@/providers/ThemeWrapper";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import SessionProviders from "@/providers/SessionProviders";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
@@ -30,7 +31,9 @@ export default async function RootLayout({ children }) {
         <NextTopLoader color="#0f4098" showSpinner={false} />
         <NextIntlClientProvider messages={messages} locale={locale}>
           <SessionProviders session={session}>
-            <ThemeWrapper>{children}</ThemeWrapper>
+            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+              <ThemeWrapper>{children}</ThemeWrapper>
+            </ThemeProvider>
           </SessionProviders>
           <GoogleAnalytics gaId="G-5ZN5XR28VX" />
         </NextIntlClientProvider>

@@ -346,17 +346,12 @@ const Muted = styled("div")(({ theme }) => ({
 }));
 
 const statusOptions = [
-  { value: "new", label: "New" },
+  { value: "new", label: "New Lead" },
   { value: "contacted", label: "Contacted" },
-  { value: "in_progress", label: "In Progress" },
-  { value: "waiting_for_documents", label: "Waiting for Documents" },
-  { value: "submitted", label: "Submitted" },
-  { value: "approved", label: "Approved" },
-  { value: "rejected", label: "Rejected" },
-  { value: "on_hold", label: "On Hold" },
-  { value: "closed", label: "Closed" },
   { value: "interested", label: "Interested" },
+  { value: "negotiating", label: "Negotiation" },
   { value: "purchased", label: "Purchased" },
+  { value: "lost", label: "Lost" },
 ];
 const temperatureOptions = [
   { value: "cold", label: "Cold" },

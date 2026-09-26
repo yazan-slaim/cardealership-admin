@@ -234,7 +234,7 @@ function ForensicDashboard({ data, vin }) {
           <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-lg">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-gray-900">
               <ImageIcon className="h-6 w-6 text-gray-500" />
-              Auction Photos (BidFax)
+              Pictures Previous Entering Jordan
             </h2>
             
             {images && images.length > 0 ? (

@@ -5,6 +5,8 @@ import SoldCar from "@/models/SoldCar"; // default export
 import { Car } from "@/models/Car";
 import { Client } from "@/models/Client";
 import { Employee } from "@/models/Employee";
+import { logActivity } from "@/lib/logActivity";
+import { getDealershipScope, getDealershipId } from "@/lib/getDealershipScope";
 
 /**
  * GET  /api/madesale?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
@@ -31,8 +33,10 @@ export async function GET(req) {
       ? new Date(new Date(endDate).setHours(23, 59, 59, 999))
       : currentDate;
 
+    const scopeFilter = await getDealershipScope();
+
     const salesData = await SoldCar.aggregate([
-      { $match: { createdAt: { $gte: start, $lte: end } } },
+      { $match: { ...scopeFilter, createdAt: { $gte: start, $lte: end } } },
       {
         $group: {
           _id: {
@@ -93,8 +97,9 @@ export async function POST(req) {
     }
   }
 
-  const session = await mongoose.startSession();
+  const sessionDb = await mongoose.startSession();
   try {
+    const dealershipId = await getDealershipId();
     let soldDoc;
     let daysInStock = 0;
 
@@ -132,7 +137,7 @@ export async function POST(req) {
       car.sold = true;
       car.SaleDate = saleDate;
       car.set("daysInStock", daysInStock, { strict: false }); // will work even if not in schema
-      await car.save({ session });
+      await car.save({ session: sessionDb });
 
       // 4) Create SoldCar record
       const [created] = await SoldCar.create(
@@ -140,6 +145,7 @@ export async function POST(req) {
           {
             agent: agentId,
             car: carId,
+            dealershipId,
             carTitle: sale.carTitle || car.title,
             buyer: buyerId,
             salePrice: Number(sale.salePrice),
@@ -171,7 +177,7 @@ export async function POST(req) {
             },
           },
         ],
-        { session }
+        { session: sessionDb }
       );
       soldDoc = created;
 
@@ -183,7 +189,7 @@ export async function POST(req) {
           $addToSet: { purchases: soldDoc._id },
           $pull: { interestedCars: carId }, // 👈 remove from interested list
         },
-        { new: true, session }
+        { new: true, session: sessionDb }
       );
 
       // 6) Update Employee metrics
@@ -209,8 +215,23 @@ export async function POST(req) {
             totalRevenueGenerated: revenueContribution,
           },
         },
-        { new: true, session }
+        { new: true, session: sessionDb }
       );
+
+      // Log activity (fire-and-forget)
+      logActivity({
+        type: "sale_recorded",
+        clientId: buyerId,
+        carId: carId,
+        metadata: {
+          contentPreview: `Sale recorded — ${sale.carTitle || "Vehicle"} for ${Number(sale.salePrice).toLocaleString()} JOD`,
+          salePrice: sale.salePrice,
+          paymentMethod: sale.paymentMethod,
+        },
+        performedBy: agentId,
+        performedByModel: "Employee",
+        source: "employee",
+      });
     });
 
     return NextResponse.json(
@@ -230,6 +251,6 @@ export async function POST(req) {
       { status }
     );
   } finally {
-    await session.endSession();
+    await sessionDb.endSession();
   }
 }

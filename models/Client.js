@@ -13,6 +13,11 @@ const addressSchema = new mongoose.Schema(
 
 const clientSchema = new mongoose.Schema(
   {
+    dealershipId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Dealership',
+      index: true,
+    },
     fullName: {
       type: String,
       required: true,
@@ -98,6 +103,25 @@ const clientSchema = new mongoose.Schema(
       type: [{ type: mongoose.Schema.Types.ObjectId, ref: "File" }],
       default: [],
     },
+
+    // ── Rental-specific fields (only used when businessType === 'rental') ──
+    driverLicense: {
+      number: { type: String, trim: true, default: "" },
+      expiry: Date,
+      frontImage: String,
+      backImage: String,
+    },
+    idDocument: {
+      type: { type: String, trim: true, default: "" }, // passport / national ID
+      number: { type: String, trim: true, default: "" },
+      image: String,
+    },
+    bookings: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Booking" }],
+      default: [],
+    },
+    totalRentals: { type: Number, default: 0 },
+    totalSpent: { type: Number, default: 0 },
   },
   { timestamps: true },
 );

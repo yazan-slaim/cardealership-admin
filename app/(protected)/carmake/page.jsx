@@ -1,68 +1,77 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { TrendingUp, Sparkles, ArrowDownRight, ArrowUpRight, BarChart3, Minus } from "lucide-react";
+import { TrendingUp, Sparkles, ArrowDownRight, ArrowUpRight, BarChart3, Minus, Users } from "lucide-react";
 import clsx from "clsx";
 
 export default function CarMakesPage() {
-  const [makes, setMakes] = useState([]);
+  const [analysis, setAnalysis] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchMakes = async () => {
+    const fetchAnalysis = async () => {
       try {
-        const res = await fetch("/api/carmake");
+        const res = await fetch("/api/carmake/analysis");
         if (res.ok) {
           const data = await res.json();
-          // Expecting an array of makes
-          setMakes(Array.isArray(data) ? data : []);
+          setAnalysis(Array.isArray(data) ? data : []);
         }
       } catch (err) {
-        console.error(err);
+        console.error("Failed to fetch car make analysis", err);
       } finally {
         setIsLoading(false);
       }
     };
-    fetchMakes();
+    fetchAnalysis();
   }, []);
 
-  // Use real makes if available, otherwise fallback to the design's specific brands
-  const displayMakes = makes.length > 0 
-    ? makes.map(m => m.name || m.brandName || m.title || "Brand") 
-    : ["BYD", "Toyota", "Tesla", "Mercedes"];
+  // Compute top-level metrics
+  let fastestMover = { make: "N/A", avgDaysToSell: 0 };
+  let highestDemand = { make: "N/A", demandScore: 0 };
+  let bestConversion = { make: "N/A", conversionRate: 0 };
+  let overallListingAvg = 0;
+  let overallSaleAvg = 0;
+  let validPricingMakes = 0;
 
-  const getMockTrend = (index) => {
-    const trends = [
-      { status: "Hot", color: "bg-emerald-100 text-emerald-700", trend: "+2.4%", tColor: "text-emerald-600", units: 142, icon: ArrowUpRight },
-      { status: "Stable", color: "bg-slate-200 text-slate-700", trend: "0.0%", tColor: "text-slate-500", units: 318, icon: Minus },
-      { status: "Slow", color: "bg-red-100 text-red-700", trend: "-5.2%", tColor: "text-red-600", units: 45, icon: ArrowDownRight },
-      { status: "Stable", color: "bg-slate-200 text-slate-700", trend: "+1.1%", tColor: "text-emerald-600", units: 82, icon: ArrowUpRight }
-    ];
-    return trends[index % trends.length];
-  };
+  if (analysis.length > 0) {
+    const soldMakes = analysis.filter(a => a.soldUnits > 0);
+    if (soldMakes.length > 0) {
+      fastestMover = soldMakes.reduce((prev, curr) => (prev.avgDaysToSell < curr.avgDaysToSell ? prev : curr));
+    }
+    highestDemand = analysis.reduce((prev, curr) => (prev.demandScore > curr.demandScore ? prev : curr));
+    
+    const convertingMakes = analysis.filter(a => a.conversionRate > 0);
+    if (convertingMakes.length > 0) {
+      bestConversion = convertingMakes.reduce((prev, curr) => (prev.conversionRate > curr.conversionRate ? prev : curr));
+    }
 
-  const getSubtitle = (make) => {
-    const map = {
-      "BYD": "EV / Hybrid focus",
-      "Toyota": "Hybrid Leader",
-      "Tesla": "Premium EV",
-      "Mercedes": "Luxury ICE/EV"
-    };
-    return map[make] || "Automotive Brand";
-  };
+    // Averages for competitive pricing block
+    analysis.forEach(a => {
+      if (a.avgListingPrice > 0 && a.avgSalePrice > 0) {
+        overallListingAvg += a.avgListingPrice;
+        overallSaleAvg += a.avgSalePrice;
+        validPricingMakes++;
+      }
+    });
+  }
+
+  let globalPriceGap = 0;
+  if (validPricingMakes > 0) {
+    globalPriceGap = ((overallSaleAvg - overallListingAvg) / overallListingAvg) * 100;
+  }
 
   return (
     <div className="max-w-7xl mx-auto pb-12">
       {/* Header Area */}
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-8">
         <div className="max-w-2xl">
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-2">Market Penetration (Car Brands)</h1>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-2">Advanced Market Analysis</h1>
           <p className="text-slate-500 text-sm leading-relaxed">
-            Zarqa Free Zone & Greater Amman brand performance metrics and inventory density. Real-time AI analysis indicates strong shift towards hybrid models.
+            Real-time dealership performance metrics, inventory density, and predictive demand forecasting based on actual sales and enquiry data.
           </p>
         </div>
         <div className="flex items-center">
           <span className="bg-slate-100 text-slate-500 px-3 py-1.5 rounded-full text-[10px] font-bold tracking-wider uppercase">
-            Last Updated: Just Now
+            Live Database Connection
           </span>
         </div>
       </div>
@@ -75,53 +84,58 @@ export default function CarMakesPage() {
             <TrendingUp className="w-4 h-4" />
             <span className="text-[10px] font-bold tracking-wider uppercase">Fastest Mover</span>
           </div>
-          <h3 className="text-2xl font-bold text-slate-900 mb-6">BYD Seagull</h3>
+          <h3 className="text-2xl font-bold text-slate-900 mb-6">{fastestMover.make}</h3>
           <div className="flex items-end gap-2">
-            <span className="text-4xl font-bold text-emerald-700">14 Days</span>
+            <span className="text-4xl font-bold text-emerald-700">{fastestMover.avgDaysToSell > 0 ? fastestMover.avgDaysToSell : "--"} Days</span>
             <span className="text-sm font-semibold text-slate-500 mb-1">avg time on lot</span>
           </div>
         </div>
 
         {/* Highest Demand */}
         <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-          <div className="flex items-center gap-2 mb-4 text-slate-400">
+          <div className="flex items-center gap-2 mb-4 text-[#0f4098]">
             <Sparkles className="w-4 h-4" />
             <span className="text-[10px] font-bold tracking-wider uppercase">Highest Demand</span>
           </div>
-          <h3 className="text-2xl font-bold text-slate-900 mb-6">Toyota Prius</h3>
+          <h3 className="text-2xl font-bold text-slate-900 mb-6">{highestDemand.make}</h3>
           <div className="flex items-end gap-2">
-            <span className="text-4xl font-bold text-[#0f4098]">94/100</span>
+            <span className="text-4xl font-bold text-[#0f4098]">{highestDemand.demandScore}/100</span>
             <span className="text-sm font-semibold text-slate-500 mb-1">demand score</span>
           </div>
         </div>
 
-        {/* AI Insight (spans 1 col on large, 2 on medium) */}
-        <div className="bg-[#f8faff] border border-blue-100 rounded-xl p-6 md:col-span-2 lg:col-span-1 shadow-sm flex flex-col justify-center relative overflow-hidden">
+        {/* Best Conversion Rate */}
+        <div className="bg-[#f8faff] border border-blue-100 rounded-xl p-6 shadow-sm flex flex-col justify-center relative overflow-hidden">
           <div className="flex items-center gap-2 mb-3 relative z-10">
-            <Sparkles className="w-4 h-4 text-[#0f4098]" />
-            <span className="text-[10px] font-bold text-[#0f4098] tracking-wider uppercase">AI Market Insight</span>
+            <Users className="w-4 h-4 text-blue-700" />
+            <span className="text-[10px] font-bold text-blue-700 tracking-wider uppercase">Top Converting Brand</span>
           </div>
-          <p className="text-sm text-slate-700 leading-relaxed relative z-10">
-            Chinese EV brands are showing a <strong className="text-[#0f4098]">22% month-over-month increase</strong> in search volume in the Zarqa Free Zone. Recommend increasing inventory for BYD and Changan models under 15,000 JOD.
-          </p>
+          <h3 className="text-2xl font-bold text-slate-900 mb-4">{bestConversion.make}</h3>
+          <div className="flex items-end gap-2 relative z-10">
+            <span className="text-4xl font-bold text-blue-700">{bestConversion.conversionRate}%</span>
+            <span className="text-sm font-semibold text-slate-500 mb-1">lead-to-sale rate</span>
+          </div>
           <Sparkles className="absolute -right-8 -bottom-8 w-32 h-32 text-blue-50 pointer-events-none" />
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column (Brand Inventory) */}
+        {/* Left Column (Brand Inventory & Demand) */}
         <div className="lg:col-span-2 space-y-6">
           <h2 className="text-lg font-bold text-slate-900">Brand Inventory & Demand</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {isLoading ? (
               <div className="col-span-2 text-center py-12 text-slate-500 text-sm">Loading market data...</div>
+            ) : analysis.length === 0 ? (
+              <div className="col-span-2 text-center py-12 text-slate-500 text-sm">No data available for market analysis.</div>
             ) : (
-              displayMakes.map((make, idx) => {
-                const trend = getMockTrend(idx);
-                const TIcon = trend.icon;
-                const progress = Math.min(100, Math.max(10, (trend.units / 350) * 100)); // mock calculation
-                
+              analysis.map((data, idx) => {
+                const make = data.make || "Unknown";
+                const demandProgress = data.demandScore;
+                const TIcon = data.priceGapPercent > 0 ? ArrowUpRight : (data.priceGapPercent < 0 ? ArrowDownRight : Minus);
+                const tColor = data.priceGapPercent > 0 ? "text-emerald-600" : (data.priceGapPercent < 0 ? "text-red-600" : "text-slate-500");
+
                 return (
                   <div key={idx} className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
                     <div className="flex justify-between items-start mb-6">
@@ -130,29 +144,38 @@ export default function CarMakesPage() {
                           {make.substring(0,3).toUpperCase()}
                         </div>
                         <div>
-                          <h3 className="font-bold text-slate-900 leading-tight">{make}</h3>
-                          <p className="text-xs text-slate-500">{getSubtitle(make)}</p>
+                          <h3 className="font-bold text-slate-900 leading-tight truncate max-w-[150px]">{make}</h3>
+                          <p className="text-xs text-slate-500">{data.soldUnits} all-time sales</p>
                         </div>
                       </div>
-                      <span className={clsx("px-2 py-0.5 rounded text-[10px] font-bold tracking-wider", trend.color)}>
-                        {trend.status}
+                      <span className={clsx("px-2 py-0.5 rounded text-[10px] font-bold tracking-wider", data.trendColor)}>
+                        {data.trendStatus}
                       </span>
                     </div>
 
                     <div className="flex justify-between items-end mb-2">
-                      <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Current Inventory</span>
-                      <span className="font-bold text-slate-900">{trend.units} units</span>
+                      <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Active Inventory</span>
+                      <span className="font-bold text-slate-900">{data.activeUnits} units</span>
                     </div>
                     
-                    <div className="w-full bg-slate-100 rounded-full h-1.5 mb-4">
-                      <div className={clsx("h-1.5 rounded-full", trend.status === "Slow" ? "bg-red-500" : trend.status === "Stable" ? "bg-slate-500" : "bg-[#0f4098]")} style={{ width: `${progress}%` }}></div>
+                    <div className="w-full bg-slate-100 rounded-full h-1.5 mb-2">
+                      <div className={clsx("h-1.5 rounded-full", data.trendStatus === "Slow" ? "bg-red-500" : data.trendStatus === "Stable" ? "bg-slate-500" : "bg-emerald-500")} style={{ width: `${demandProgress}%` }}></div>
                     </div>
+                    <p className="text-right text-[10px] text-slate-400 font-medium mb-4">Demand Score: {data.demandScore}/100</p>
                     
-                    <div className="flex justify-between items-center border-t border-slate-100 pt-4">
-                      <span className="text-xs text-slate-500 flex items-center gap-1.5">
-                        <TIcon className={clsx("w-3.5 h-3.5", trend.tColor)} /> Price Trend
-                      </span>
-                      <span className={clsx("text-sm font-bold", trend.tColor)}>{trend.trend}</span>
+                    <div className="grid grid-cols-2 gap-4 border-t border-slate-100 pt-4">
+                      <div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase">Conversion Rate</span>
+                        <div className="text-sm font-bold text-slate-700">{data.conversionRate}%</div>
+                      </div>
+                      <div className="text-right">
+                         <span className="text-[10px] font-bold text-slate-400 uppercase flex items-center justify-end gap-1">
+                           Price Trend <TIcon className={clsx("w-3 h-3", tColor)} />
+                         </span>
+                         <div className={clsx("text-sm font-bold", tColor)}>
+                           {data.priceGapPercent > 0 ? "+" : ""}{data.priceGapPercent.toFixed(1)}%
+                         </div>
+                      </div>
                     </div>
                   </div>
                 );
@@ -164,54 +187,62 @@ export default function CarMakesPage() {
         {/* Right Column (Charts & Pricing) */}
         <div className="space-y-6 pt-1 lg:pt-12">
           
-          {/* Sell-Through Rate */}
+          {/* Sell-Through Velocity Chart */}
           <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm relative">
              <div className="flex justify-between items-center mb-8">
-               <h3 className="font-bold text-slate-900">Zarqa Sell-Through Rate</h3>
-               <button className="text-slate-400 hover:text-slate-600"><Minus className="w-4 h-4" /></button>
+               <h3 className="font-bold text-slate-900">Velocity by Brand</h3>
+               <BarChart3 className="w-4 h-4 text-slate-400" />
              </div>
              
-             {/* Mock Chart Placeholder */}
+             {/* Chart */}
              <div className="h-40 relative flex items-end justify-between px-2 pb-6 border-b border-slate-100">
-                <span className="absolute left-0 bottom-[100%] text-[10px] text-slate-400 -mb-2">100%</span>
-                <span className="absolute left-0 bottom-[50%] text-[10px] text-slate-400 -mb-2">50%</span>
-                <span className="absolute left-0 bottom-0 text-[10px] text-slate-400 -mb-2">0%</span>
+                <span className="absolute left-0 bottom-[100%] text-[10px] text-slate-400 -mb-2">90d</span>
+                <span className="absolute left-0 bottom-[50%] text-[10px] text-slate-400 -mb-2">45d</span>
+                <span className="absolute left-0 bottom-0 text-[10px] text-slate-400 -mb-2">0d</span>
                 
-                {/* Bars */}
-                <div className="w-8 bg-blue-100 rounded-t-sm h-[80%] ml-8 relative group cursor-pointer hover:bg-blue-200 transition-colors"></div>
-                <div className="w-8 bg-blue-100 rounded-t-sm h-[95%] relative group cursor-pointer hover:bg-blue-200 transition-colors"></div>
-                <div className="w-8 bg-blue-100 rounded-t-sm h-[40%] relative group cursor-pointer hover:bg-blue-200 transition-colors"></div>
-                <div className="w-8 bg-blue-100 rounded-t-sm h-[60%] relative group cursor-pointer hover:bg-blue-200 transition-colors"></div>
-                <div className="w-8 bg-blue-100 rounded-t-sm h-[75%] relative group cursor-pointer hover:bg-blue-200 transition-colors"></div>
+                {analysis.slice(0, 5).map((a, i) => {
+                  const heightPercent = Math.min(100, (a.avgDaysToSell / 90) * 100) || 5;
+                  return (
+                    <div key={i} className="w-8 bg-blue-100 rounded-t-sm relative group cursor-pointer hover:bg-blue-200 transition-colors flex flex-col justify-end items-center" style={{ height: `${heightPercent}%` }}>
+                      <span className="absolute -top-6 text-[10px] font-bold text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {a.avgDaysToSell}d
+                      </span>
+                    </div>
+                  )
+                })}
              </div>
              
              <div className="flex justify-between px-2 pt-2 text-[10px] font-bold text-slate-400">
-               <span className="ml-8">BYD</span>
-               <span>TYT</span>
-               <span>TSL</span>
-               <span>MBZ</span>
-               <span>KST</span>
+                {analysis.slice(0, 5).map((a, i) => (
+                  <span key={i} className="truncate max-w-[40px] text-center w-8">{a.make.substring(0,3).toUpperCase()}</span>
+                ))}
              </div>
              
-             <p className="text-xs text-slate-500 mt-6 text-center">Percentage of inventory sold within 30 days.</p>
+             <p className="text-xs text-slate-500 mt-6 text-center">Average days in stock before sale.</p>
           </div>
 
           {/* Competitive Pricing */}
           <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
              <div className="flex justify-between items-start mb-6">
                <div>
-                 <h3 className="font-bold text-slate-900 mb-1">Competitive Pricing</h3>
-                 <p className="text-xs text-slate-500">Your average listing price vs. Market Average</p>
+                 <h3 className="font-bold text-slate-900 mb-1">Global Price Variance</h3>
+                 <p className="text-xs text-slate-500">Average sold price vs. Initial listing</p>
                </div>
              </div>
              
              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700">
-                  <ArrowDownRight className="w-6 h-6" />
+                <div className={clsx("w-12 h-12 rounded-lg flex items-center justify-center", 
+                  globalPriceGap >= 0 ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+                )}>
+                  {globalPriceGap >= 0 ? <ArrowUpRight className="w-6 h-6" /> : <ArrowDownRight className="w-6 h-6" />}
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-slate-900">-4.2%</p>
-                  <p className="text-xs text-slate-500">Below market average</p>
+                  <p className="text-2xl font-bold text-slate-900">
+                    {globalPriceGap > 0 ? "+" : ""}{globalPriceGap.toFixed(1)}%
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {globalPriceGap >= 0 ? "Selling above asking" : "Selling below asking"}
+                  </p>
                 </div>
              </div>
           </div>

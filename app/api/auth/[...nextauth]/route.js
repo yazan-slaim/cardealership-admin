@@ -6,6 +6,7 @@ import crypto from "crypto";
 import jwt from "jsonwebtoken";
 
 import { Employee } from "@/models/Employee";
+import { Dealership } from "@/models/Dealership";
 import { connectMongoDB } from "@/lib/mongodb";
 
 export const runtime = "nodejs"; // bcrypt needs Node runtime
@@ -54,6 +55,13 @@ export const authOptions = {
 
           if (!ok) return null;
 
+          // Look up businessType from the Dealership
+          let businessType = 'dealership';
+          if (emp.dealershipId) {
+            const dealership = await Dealership.findById(emp.dealershipId).select('businessType').lean();
+            if (dealership?.businessType) businessType = dealership.businessType;
+          }
+
           return {
             id: emp._id.toString(),
             email: emp.email,
@@ -61,6 +69,7 @@ export const authOptions = {
             image: emp.profileImageUrl || null,
             role: emp.role || "agent",
             dealershipId: emp.dealershipId ? emp.dealershipId.toString() : null,
+            businessType,
           };
         } catch (e) {
           console.error("authorize error:", e);
@@ -110,6 +119,7 @@ export const authOptions = {
         token.id = user.id;
         token.role = user.role;
         token.dealershipId = user.dealershipId;
+        token.businessType = user.businessType || 'dealership';
       }
       return token;
     },
@@ -119,6 +129,7 @@ export const authOptions = {
         session.user.id = token.id;
         session.user.role = token.role;
         session.user.dealershipId = token.dealershipId;
+        session.user.businessType = token.businessType || 'dealership';
 
         if (token.id && process.env.JWT_SECRET) {
           const apiToken = jwt.sign({ id: token.id }, process.env.JWT_SECRET, {
